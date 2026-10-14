@@ -12,7 +12,7 @@ Repositório › Settings › Secrets and variables › Actions › **New reposi
 | `ADMOB_REWARDED_ID` | ID do bloco Premiado (`ca-app-pub-XXXX/ZZZZ`) |
 | `ADMOB_INTERSTITIAL_ID` | ID do bloco Intersticial |
 
-Depois: aba **Actions › Streamer Idle Android › Run workflow** (escolha a branch com o jogo). Ao terminar, baixe o artefato `quero-ser-streamer-N`: contém `app-release.aab` (Play) e `app-release.apk`.
+Depois: aba **Actions › Android › Run workflow**. Ao terminar, baixe o artefato `quero-ser-streamer-N`: contém `app-release.aab` (Play) e `app-release.apk`.
 O versionCode é automático (nº do run + 10), sempre maior que o anterior.
 
 ## 1. Play Console — criar o app
