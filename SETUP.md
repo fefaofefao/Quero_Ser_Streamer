@@ -80,7 +80,7 @@ service cloud.firestore {
 
 ## 5. Ficha da loja
 * Textos: `store/listing.md` (PT, EN, ES).
-* Gráficos: `store/icon-512.png`, `store/feature-graphic-1024x500.png`, `store/screenshots/*.png` (1080×1920).
+* Gráficos: `store/icon-512.png`, `store/feature-graphic-<idioma>.png`, `store/screenshots/<idioma>/*.png` (1080×1920; pt-BR, en-US e es-419).
 * Política: `https://fefaofefao.github.io/quero-ser-streamer/privacy.html`
 * **Público-alvo**: marque **13+** (13-15, 16-17, 18+). Marcar menores de 13 cai na política de Famílias e exige SDKs/anúncios certificados.
 * **Classificação**: questionário IARC — sem violência real (os "jogos" no monitor são desenhos), compras no app, anúncios, sem interação entre usuários.

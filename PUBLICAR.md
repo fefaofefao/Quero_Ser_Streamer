@@ -16,7 +16,7 @@ Depois: aba **Actions › Android › Run workflow**. Ao terminar, baixe o artef
 O versionCode é automático (nº do run + 10), sempre maior que o anterior.
 
 ## 1. Play Console — criar o app
-* Nome: **Quero ser Streamer: Idle Tycoon** · Idioma padrão: Português (Brasil) · Jogo · Gratuito
+* Nome: **Quero ser Streamer: Simulador** (en-US: **Idle Streamer: Rise to Fame** · es-419: **Quiero ser Streamer: Simulador**) · Idioma padrão: Português (Brasil) · Jogo · Gratuito
 * Pacote (vem do AAB): `com.fsamplabs.streameridle`
 * Play App Signing: **usar chave gerada pelo Google** (padrão). O AAB vai assinado com a chave de upload.
 * Upload key — SHA-1: `71:F7:B6:94:86:58:73:C8:5E:C0:96:C3:3E:93:91:BE:69:24:EB:35`
@@ -61,8 +61,8 @@ Produtos no app (todos ativos):
 Assinatura: ID `monthly_pass` · nome "Passe Mensal" · plano base ID `mensal`, renovação automática **mensal**, R$ 14,90.
 
 ### Ficha da loja (textos em `store/listing.md`)
-* Ícone: `store/icon-512.png` · Gráfico de recursos: `store/feature-graphic-1024x500.png`
-* Capturas de tela do telefone: `store/screenshots/01..08` (mín. 2, recomendo as 8)
+* Ícone: `store/icon-512.png` · Gráfico de recursos: `store/feature-graphic-pt-BR.png`, `-en-US.png`, `-es-419.png`
+* Capturas de tela do telefone: `store/screenshots/<idioma>/01..08` (pt-BR, en-US, es-419; mín. 2, recomendo as 8). Para gerar de novo: `npm run build`, sirva `web/` na porta 8765 e rode `npm run store`
 
 ### Lançamento
 Recomendado: **Teste interno** primeiro (sobe na hora, testa compras com conta de teste em Configuração › Teste de licença), depois **Produção**. Conta pessoal nova exige teste fechado com 12 testadores por 14 dias antes da produção — se for o seu caso, comece pelo **Teste fechado**.

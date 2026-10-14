@@ -1,7 +1,7 @@
 # Textos da Play Store
 
 ## Português (pt-BR)
-**Nome (30):** Quero ser Streamer: Idle Tycoon
+**Nome (30):** Quero ser Streamer: Simulador
 **Descrição curta (80):** Do PC lento dos avós à mansão de astro: vire o maior streamer do mundo!
 
 **Descrição completa:**
@@ -33,7 +33,7 @@ Comece no BlocoCai e conquiste comunidades até Pulo Pixel, Gol Total, CuboCraft
 Todos os jogos, marcas e streamers do jogo são fictícios.
 
 ## English
-**Name:** Streamer Dream: Idle Tycoon
+**Name:** Idle Streamer: Rise to Fame
 **Short description:** From grandma's slow PC to a star mansion: become the world's #1 streamer!
 
 **Full description:**
@@ -47,7 +47,7 @@ Your grandparents gave you a slow PC, a CRT monitor and a ball mouse. Your caree
 All games, brands and streamers in this game are fictional.
 
 ## Español
-**Nombre:** Quiero ser Streamer: Idle
+**Nombre:** Quiero ser Streamer: Simulador
 **Descripción corta:** ¡De la PC lenta de los abuelos a una mansión: sé el streamer #1 del mundo!
 
 **Descripción completa:**
