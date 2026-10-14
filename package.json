@@ -1,0 +1,22 @@
+{
+  "name": "streamer-idle",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Quero ser Streamer — idle tycoon for Android",
+  "scripts": {
+    "build": "node tools/build.mjs",
+    "sim": "node tools/sim.mjs 150 6",
+    "calibrate": "node tools/calibrate.mjs",
+    "icons": "node tools/icons.mjs",
+    "store": "node tools/store.mjs",
+    "smoke": "node tools/smoke.mjs",
+    "apk:test": "bash tools/build-apk-offline.sh"
+  },
+  "devDependencies": {
+    "@fontsource/fredoka": "^5.3.0",
+    "@fontsource/nunito": "^5.3.0",
+    "esbuild": "^0.28.2",
+    "playwright-core": "^1.64.0"
+  }
+}

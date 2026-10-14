@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Quero ser Streamer</string>
+    <string name="notif_channel">Lembretes do jogo</string>
+    <string name="notif_channel_desc">Passes de autógrafo, presente diário e ganhos offline</string>
+    <string name="test_ad_title">Anúncio de teste</string>
+    <string name="test_ad_body">Os anúncios do AdMob aparecem aqui na versão da Play Store.</string>
+    <string name="test_buy_title">[TESTE] Compra simulada</string>
+    <string name="test_buy_body">Esta versão de teste simula compras. Produto: %1$s</string>
+    <string name="ok">OK</string>
+    <string name="cancel">Cancelar</string>
+</resources>

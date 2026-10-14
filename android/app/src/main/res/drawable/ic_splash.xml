@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 12+ splash icon (shown inside a 160dp circle with the icon background color) -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="240dp" android:height="240dp"
+    android:viewportWidth="240" android:viewportHeight="240">
+    <path android:fillColor="#FF2A1F3D" android:pathData="M68,78h104a14,14 0,0 1,14 14v54a14,14 0,0 1,-14 14H68a14,14 0,0 1,-14 -14V92a14,14 0,0 1,14 -14z"/>
+    <path android:fillColor="#FF6C5CE7" android:pathData="M72,84h96a10,10 0,0 1,10 10v50a10,10 0,0 1,-10 10H72a10,10 0,0 1,-10 -10V94a10,10 0,0 1,10 -10z"/>
+    <path android:fillColor="#FFFFFFFF" android:strokeColor="#FF2A1F3D" android:strokeWidth="4" android:pathData="M108,102l28,17 -28,17z"/>
+    <path android:fillColor="#FF2A1F3D" android:pathData="M108,160h24v10h-24zM92,168h56a4,4 0,0 1,4 4v2a4,4 0,0 1,-4 4H92a4,4 0,0 1,-4 -4v-2a4,4 0,0 1,4 -4z"/>
+    <path android:fillColor="#FFFF3D64" android:strokeColor="#FF2A1F3D" android:strokeWidth="4" android:pathData="M140,58h36a10,10 0,0 1,10 10v4a10,10 0,0 1,-10 10h-36a10,10 0,0 1,-10 -10v-4a10,10 0,0 1,10 -10z"/>
+    <path android:fillColor="#FFFFFFFF" android:pathData="M146,70m-4,0a4,4 0,1 1,8 0a4,4 0,1 1,-8 0"/>
+    <path android:fillColor="#FFFFD23F" android:strokeColor="#FF2A1F3D" android:strokeWidth="3" android:pathData="M66,52l5,10 11,1.5 -8,7.6 2,11 -10,-5.3 -10,5.3 2,-11 -8,-7.6 11,-1.5z"/>
+</vector>
