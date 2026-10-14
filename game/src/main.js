@@ -107,9 +107,9 @@ let tutTaps = 0;
 function tutorial() {
   if (!S.introDone) return;
   switch (S.tutorial) {
-    case 0: coachAt($('#stage .stage-inner'), t('tut1'), 'center'); break;
-    case 1: showTab('channel'); setTabActive('channel'); setTimeout(() => coachAt($('[data-buy="u0"]'), t('tut2')), 50); break;
-    case 2: coachAt($('[data-tab="games"]'), t('tut3'), 'above'); break;
+    case 0: coachAt('#stage .stage-inner', t('tut1'), 'center'); break;
+    case 1: coachAt(() => currentTab() === 'channel' ? ['[data-buy="u0"]', 'below'] : ['[data-tab="channel"]', 'above'], t('tut2')); break;
+    case 2: coachAt(() => currentTab() === 'games' ? ['[data-buy="c0"]', 'below'] : ['[data-tab="games"]', 'above'], t('tut3')); break;
     default: clearCoach();
   }
 }
@@ -124,6 +124,7 @@ function wireEvents() {
     if (first) {
       M.marketCelebrate(m);
       bridge.log('market_unlock', { market: E.MARKETS[m].id });
+      if (S.tutorial <= 2) tutAdvance(3);
       if (m === 1 && S.tutorial < 4) setTimeout(() => toast(ic('star') + ' ' + t('tut4')), 1500);
     } else toast(marketBadge(E.MARKETS[m].id, 'sm') + ' ' + t('mk_' + E.MARKETS[m].id) + ' ' + fmtMult(E.MARKETS[m].mult));
   });
@@ -172,6 +173,7 @@ function wireEvents() {
     if (k === 'u0' && S.tutorial === 1) tutAdvance(2);
     if (k[0] === 'c' && S.tutorial <= 2) tutAdvance(3);
   };
+  document.addEventListener('coach-dismiss', () => { if (S.tutorial <= 2) tutAdvance(S.tutorial + 1); });
   document.addEventListener('stage-tap', () => {
     if (S.tutorial === 0 && ++tutTaps >= 8) tutAdvance(1);
   });
@@ -333,8 +335,7 @@ function bindUi() {
   $('#tabs').addEventListener('click', (e) => {
     const b = e.target.closest('[data-tab]'); if (!b) return;
     sfx.click(); setTabActive(b.dataset.tab); showTab(b.dataset.tab);
-    if (b.dataset.tab === 'games' && S.tutorial === 2) setTimeout(() => coachAt($('[data-buy="c0"]'), t('tut3')), 60);
-    if (b.dataset.tab === 'setup' && S.tutorial === 3 && S.equip.pc === 1 && S.diamonds >= 40) { S.tutorial = 4; setTimeout(() => coachAt($('[data-eq="pc"]'), t('tut5')), 60); setTimeout(clearCoach, 4000); }
+    if (b.dataset.tab === 'setup' && S.tutorial === 3 && S.equip.pc === 1 && S.diamonds >= 40) { S.tutorial = 4; coachAt('[data-eq="pc"]', t('tut5')); setTimeout(clearCoach, 4000); }
   });
   $('#quick').addEventListener('click', (e) => {
     const b = e.target.closest('[data-q]'); if (!b) return;

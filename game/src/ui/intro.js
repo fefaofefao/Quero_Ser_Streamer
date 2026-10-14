@@ -58,24 +58,45 @@ export function playIntro(done) {
 }
 
 // ---------- tutorial coach ----------
+// target: element, CSS selector, or a function returning [selector|element, place].
+// The target is looked up again on every tick, because panels re-render and
+// replace their buttons; when it is missing or hidden, the coach hides too.
 let coach = null;
 export function coachAt(target, text, place = 'below') {
   clearCoach();
   if (!target) return;
   coach = document.createElement('div');
-  coach.className = 'coach ' + place;
+  coach.className = 'coach';
   coach.innerHTML = `<div class="hand"><svg viewBox="0 0 40 48"><path d="M14 22V8a4 4 0 0 1 8 0v12l2-1a4 4 0 0 1 5 2l1 1a4 4 0 0 1 5 3v10c0 7-5 11-12 11h-3c-4 0-7-2-9-5l-6-9a3.5 3.5 0 0 1 5.5-4.2L14 26z" fill="#fff" stroke="#2a1f3d" stroke-width="2.6" stroke-linejoin="round"/></svg></div><div class="bubble">${text}</div>`;
   document.body.appendChild(coach);
+  // Tapping the bubble dismisses this hint (the tutorial moves on).
+  coach.querySelector('.bubble').addEventListener('click', () => {
+    clearCoach();
+    document.dispatchEvent(new CustomEvent('coach-dismiss'));
+  });
+  const resolve = () => {
+    let t = target, p = place;
+    if (typeof t === 'function') [t, p] = t();
+    if (typeof t === 'string') t = document.querySelector(t);
+    return [t, p || 'below'];
+  };
   const place2 = () => {
     if (!coach) return;
-    const r = target.getBoundingClientRect();
+    let [el, p] = resolve();
+    const r = el && el.isConnected ? el.getBoundingClientRect() : null;
+    const visible = r && r.width > 0 && r.height > 0 && r.bottom > 0 && r.top < window.innerHeight
+      && !document.querySelector('.modal-wrap, .auto-ov, .intro');
+    coach.style.display = visible ? '' : 'none';
+    if (!visible) return;
+    if (p === 'below' && r.top + r.height / 2 + 150 > window.innerHeight) p = 'above';
+    coach.className = 'coach ' + p;
     coach.style.left = r.left + r.width / 2 + 'px';
-    coach.style.top = (place === 'above' ? r.top : r.top + r.height / 2) + 'px';
+    coach.style.top = (p === 'above' ? r.top : r.top + r.height / 2) + 'px';
     const cx = r.left + r.width / 2, half = 135;
     const clamped = Math.min(window.innerWidth - half - 8, Math.max(half + 8, cx));
     coach.style.setProperty('--bx', `calc(50% + ${clamped - cx}px)`);
   };
   place2();
-  coach._t = setInterval(place2, 300);
+  coach._t = setInterval(place2, 200);
 }
 export function clearCoach() { if (coach) { clearInterval(coach._t); coach.remove(); coach = null; } }

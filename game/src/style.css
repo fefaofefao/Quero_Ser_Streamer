@@ -512,9 +512,11 @@ em.hype { font-style: normal; font-size: 11px; background: var(--pink); color: #
 .coach { position: fixed; z-index: 75; pointer-events: none; }
 .coach .hand { position: absolute; width: 46px; height: 54px; left: -8px; top: 0; animation: tapme 1s ease-in-out infinite; filter: drop-shadow(0 4px 6px rgba(0,0,0,.5)); }
 @keyframes tapme { 50% { transform: translate(4px, 8px) scale(.92); } }
-.coach .bubble { position: absolute; left: var(--bx, 50%); top: 58px; transform: translateX(-50%); width: max-content; max-width: 250px; padding: 9px 13px; border-radius: 14px; background: #fff; color: #2a1f3d; font: 600 14px/1.3 var(--font2); box-shadow: 0 8px 20px rgba(0,0,0,.45); text-align: center; }
-.coach.above .bubble { top: auto; bottom: 10px; }
-.coach.above .hand { top: -60px; transform: rotate(180deg); animation: none; }
+.coach .bubble { pointer-events: auto; cursor: pointer; position: absolute; left: var(--bx, 50%); top: 58px; transform: translateX(-50%); width: max-content; max-width: 250px; padding: 9px 13px; border-radius: 14px; background: #fff; color: #2a1f3d; font: 600 14px/1.3 var(--font2); box-shadow: 0 8px 20px rgba(0,0,0,.45); text-align: center; }
+.coach .bubble::after { content: '✕'; position: absolute; top: -8px; right: -8px; width: 20px; height: 20px; border-radius: 50%; background: #2a1f3d; color: #fff; font-size: 11px; line-height: 20px; }
+.coach.above .bubble { top: auto; bottom: 52px; }
+.coach.above .hand { top: -50px; left: -23px; animation: tapdown 1s ease-in-out infinite; }
+@keyframes tapdown { 0%, 100% { transform: rotate(180deg) translateY(0); } 50% { transform: rotate(180deg) translateY(-6px); } }
 .coach.center .bubble { top: 60px; }
 
 /* ---------- autograph event ---------- */
