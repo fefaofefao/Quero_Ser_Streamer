@@ -25,7 +25,8 @@ android {
         applicationId = "com.fsamplabs.streameridle"
         minSdk = 24
         targetSdk = 36
-        versionCode = 3
+        // CI passes VERSION_CODE (GitHub run number + 10) so every upload is higher.
+        versionCode = (System.getenv("VERSION_CODE")?.toIntOrNull()?.plus(10)) ?: 3
         versionName = "1.0.2"
     }
 
