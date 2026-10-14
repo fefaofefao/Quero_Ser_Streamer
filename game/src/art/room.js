@@ -508,10 +508,10 @@ export function equipIconSVG(id, lv) {
   if (id === 'mouse') body = `<rect x="252" y="228" width="28" height="17" rx="4" fill="#ffffff" opacity=".08"/>` + mouse(lv).replace(/<path d="M\d+ \d+ C[^"]*" stroke="#[0-9a-f]+" stroke-width="1\.[46]" fill="none"\/>/, '');
   if (id === 'mousepad') body = mousepad(lv);
   if (id === 'chair') body = chairBack(lv, 196);
-  if (id === 'webcam') body = lv >= 4 ? webcam(4, 3) : webcam(lv, 3).replace(/<g>/, '<g transform="translate(-50 -10) scale(1)">');
+  if (id === 'webcam') body = lv >= 4 ? webcam(4, 3) : webcam(lv, 3);
   let v = vb;
-  if (id === 'webcam' && lv < 4) v = [130, 90, 40, 30];
-  if (id === 'webcam' && lv >= 4) v = [80, 168, 50, 64];
+  if (id === 'webcam' && lv < 4) v = [176, 89, 48, 30]; // centered on the cam at x=200
+  if (id === 'webcam' && lv >= 4) v = [76, 166, 56, 66];
   if (id === 'mouse') v = [250, 226, 32, 21];
   if (id === 'mousepad' && lv <= 3) v = [222, 222, 90, 28];
   if (id === 'mousepad' && lv === 4) v = [196, 224, 136, 26];

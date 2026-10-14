@@ -11,7 +11,7 @@ import { avatarFrontSVG } from '../art/avatar.js';
 import { sfx } from '../audio.js';
 import { confetti, sparkles, coinBurst } from './fx.js';
 import { bridge } from '../bridge.js';
-import { ACHIEVEMENTS, LOGIN_REWARDS, PRODUCTS, PIGGY_MAX, PIGGY_MIN_BREAK, FREE_GEMS_PER_AD, WEEKLY_TIERS, TIME_WARPS } from '../data.js';
+import { ACHIEVEMENTS, LOGIN_REWARDS, PRODUCTS, PIGGY_MAX, PIGGY_MIN_BREAK, FREE_GEMS_PER_AD, FREE_GEMS_ADS_PER_DAY, WEEKLY_TIERS, TIME_WARPS } from '../data.js';
 import { ads } from './ads.js';
 
 const ctr = (el) => { const r = el.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; };
@@ -230,39 +230,122 @@ let priceCache = {};
 export function setPrices(p) { priceCache = p || {}; }
 const priceOf = (p) => priceCache[p.id] || p.price;
 
+const O = '#2a1f3d';
+function gemShape(x, y, r, c = '#59d8ff') {
+  return `<g transform="translate(${x} ${y})"><path d="M${-r} ${-r * 0.3} L${-r * 0.55} ${-r} L${r * 0.55} ${-r} L${r} ${-r * 0.3} L0 ${r} Z" fill="${c}" stroke="${O}" stroke-width="${Math.max(1.2, r * 0.16)}" stroke-linejoin="round"/><path d="M${-r} ${-r * 0.3} L${r} ${-r * 0.3} M${-r * 0.55} ${-r} L${-r * 0.3} ${-r * 0.3} L0 ${r} L${r * 0.3} ${-r * 0.3} L${r * 0.55} ${-r}" stroke="#1d8fc2" stroke-width="${r * 0.08}" fill="none"/><path d="M${-r * 0.6} ${-r * 0.45} L${-r * 0.35} ${-r * 0.8}" stroke="#fff" stroke-width="${r * 0.14}" stroke-linecap="round"/></g>`;
+}
+// Bigger pack = bigger treasure.
+function packArt(i) {
+  const sp = `<g class="twinkle">${[[14, 12], [64, 18], [58, 52]].map(([x, y]) => `<path d="M${x} ${y - 5} L${x + 1.5} ${y - 1.5} L${x + 5} ${y} L${x + 1.5} ${y + 1.5} L${x} ${y + 5} L${x - 1.5} ${y + 1.5} L${x - 5} ${y} L${x - 1.5} ${y - 1.5} Z" fill="#fff"/>`).join('')}</g>`;
+  let body = '';
+  if (i === 0) body = gemShape(40, 36, 18);
+  if (i === 1) body = gemShape(28, 44, 12) + gemShape(52, 44, 12, '#7be3ff') + gemShape(40, 28, 15);
+  if (i === 2) body = `<path d="M18 30 Q14 60 40 62 Q66 60 62 30 Z" fill="#c08457" stroke="${O}" stroke-width="2.4"/><path d="M24 30 Q40 22 56 30" fill="#a86b3c" stroke="${O}" stroke-width="2.4"/><path d="M30 24 Q40 14 50 24" stroke="#ffd23f" stroke-width="3" fill="none"/>` + gemShape(32, 22, 9) + gemShape(48, 20, 10, '#7be3ff') + gemShape(40, 14, 8);
+  if (i >= 3) {
+    const big = i === 4;
+    body = `${big ? '<circle cx="40" cy="38" r="30" fill="url(#packGlow)"/>' : ''}<rect x="12" y="34" width="56" height="28" rx="4" fill="${big ? '#ffc83d' : '#b8743c'}" stroke="${O}" stroke-width="2.6"/><path d="M12 42 H68" stroke="${O}" stroke-width="2"/><rect x="35" y="38" width="10" height="10" rx="2" fill="${big ? '#fff3b0' : '#ffd23f'}" stroke="${O}" stroke-width="2"/>`
+      + gemShape(22, 32, 9) + gemShape(36, 28, 11, '#7be3ff') + gemShape(52, 30, 10) + gemShape(62, 32, 7, '#a78bfa') + (big ? gemShape(44, 18, 10, '#ff8fc8') + gemShape(28, 20, 7) : '')
+      + `<path d="M12 34 Q40 ${big ? 4 : 14} 68 34" fill="none" stroke="${O}" stroke-width="2.6"/>`;
+  }
+  return `<svg viewBox="0 0 80 70"><defs><radialGradient id="packGlow"><stop offset="0" stop-color="#fff6c2" stop-opacity=".9"/><stop offset="1" stop-color="#fff6c2" stop-opacity="0"/></radialGradient></defs>${body}${sp}</svg>`;
+}
+
+function piggyArt(fill) {
+  const h = 34 * Math.min(1, fill);
+  const gems = Array.from({ length: Math.round(fill * 9) }, (_, k) => gemShape(36 + (k % 4) * 11 + (Math.floor(k / 4) % 2) * 5, 76 - Math.floor(k / 4) * 8, 4.2, ['#59d8ff', '#7be3ff', '#a78bfa'][k % 3])).join('');
+  return `<svg viewBox="0 0 120 100" class="pig ${fill >= 1 ? 'full' : ''}">
+    <defs><clipPath id="belly"><ellipse cx="56" cy="62" rx="30" ry="20"/></clipPath><linearGradient id="pigG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffc2d8"/><stop offset="1" stop-color="#ff8fb5"/></linearGradient></defs>
+    <ellipse cx="58" cy="94" rx="40" ry="4" fill="#000" opacity=".25"/>
+    <path d="M30 80 v10 M48 84 v8 M70 84 v8 M86 80 v10" stroke="${O}" stroke-width="7" stroke-linecap="round"/>
+    <path d="M30 80 v10 M48 84 v8 M70 84 v8 M86 80 v10" stroke="#ff8fb5" stroke-width="4" stroke-linecap="round"/>
+    <path d="M14 52 q-10 -4 -8 6" stroke="${O}" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <ellipse cx="58" cy="56" rx="46" ry="32" fill="url(#pigG)" stroke="${O}" stroke-width="3"/>
+    <path d="M34 28 L30 12 L46 22 Z" fill="#ff8fb5" stroke="${O}" stroke-width="2.6" stroke-linejoin="round"/>
+    <ellipse cx="56" cy="62" rx="30" ry="20" fill="#3a2f6a" stroke="${O}" stroke-width="2.4"/>
+    <g clip-path="url(#belly)"><rect x="20" y="${82 - h}" width="80" height="${h + 2}" fill="#2b7fbf" opacity=".55"/>${gems}</g>
+    <ellipse cx="56" cy="62" rx="30" ry="20" fill="none" stroke="#fff" stroke-width="2" opacity=".35"/>
+    <path d="M38 52 Q46 46 52 47" stroke="#fff" stroke-width="3" opacity=".5" fill="none" stroke-linecap="round"/>
+    <rect x="48" y="23" width="22" height="5" rx="2.5" fill="${O}"/>
+    <ellipse cx="100" cy="54" rx="10" ry="12" fill="#ffb3cd" stroke="${O}" stroke-width="2.6"/>
+    <ellipse cx="97" cy="52" rx="1.8" ry="3" fill="${O}"/><ellipse cx="103" cy="52" rx="1.8" ry="3" fill="${O}"/>
+    <circle cx="86" cy="38" r="3.4" fill="${O}"/><circle cx="87" cy="37" r="1.1" fill="#fff"/>
+    <ellipse cx="80" cy="48" rx="5" ry="3" fill="#ff6b9d" opacity=".5"/>
+    <g class="drop">${gemShape(59, 10, 6)}</g>
+  </svg>`;
+}
+
 export function shopModal(onPurchase) {
+  if (!S.offers.starterUntil && !S.iap.starter) S.offers.starterUntil = Date.now() + 48 * 3600e3;
   const draw = (api) => {
-    const special = [];
-    if (!S.iap.starter) special.push(PRODUCTS.find(p => p.id === 'starter_pack'));
-    if (!S.iap.removeAds) special.push(PRODUCTS.find(p => p.id === 'remove_ads'));
-    if (!S.iap.goldBoost) special.push(PRODUCTS.find(p => p.id === 'gold_boost'));
-    special.push(PRODUCTS.find(p => p.id === 'monthly_pass'));
-    const card = (p, title, desc, art) => `<div class="offer offer-${p.id}"><div class="of-art">${art}</div><div class="of-info"><b>${title}</b><small>${desc}</small></div><button class="btn primary sm" data-buy="${p.id}">${priceOf(p)}</button></div>`;
-    const specials = special.map(p => {
-      if (p.id === 'starter_pack') return card(p, t('p_starter'), t('p_starter_d'), equipIconSVG('chair', 4)) ;
-      if (p.id === 'remove_ads') return card(p, t('p_remove_ads'), t('p_remove_ads_d'), `<div class="noads">${ic('play')}</div>`);
-      if (p.id === 'gold_boost') return card(p, t('p_gold_boost'), t('p_gold_boost_d'), ic('gold', 'xl'));
-      if (p.id === 'monthly_pass') {
-        const act = G.monthlyActive();
-        const d = new Date(S.iap.monthlyUntil).toLocaleDateString();
-        return `<div class="offer offer-monthly ${act ? 'active' : ''}"><div class="of-art">${ic('missions', 'xl')}</div><div class="of-info"><b>${t('p_monthly')}</b><small>${act ? t('monthlyActive', { d }) : t('p_monthly_d')}</small></div>
-          ${act ? (G.monthlyClaimReady() ? `<button class="btn primary sm" data-monthly="1">${ic('gem')}40</button>` : ic('check')) : `<button class="btn primary sm" data-buy="${p.id}">${priceOf(p)}</button>`}</div>`;
-      }
-      return '';
-    }).join('');
-    const piggy = S.iap.piggy || 0;
-    const pig = PRODUCTS.find(p => p.id === 'piggy_bank');
-    const piggyCard = `<div class="offer piggy"><div class="of-art"><svg viewBox="0 0 40 32"><ellipse cx="20" cy="18" rx="15" ry="11" fill="#ff9fc0" stroke="#2a1f3d" stroke-width="2"/><circle cx="33" cy="16" r="4.5" fill="#ffb8d0" stroke="#2a1f3d" stroke-width="2"/><circle cx="32" cy="15" r="1" fill="#2a1f3d"/><circle cx="34" cy="15" r="1" fill="#2a1f3d"/><rect x="15" y="6" width="9" height="2.4" rx="1.2" fill="#2a1f3d"/><path d="M10 27v3M28 27v3" stroke="#2a1f3d" stroke-width="3" stroke-linecap="round"/><path d="M7 10l-2-4 5 2" fill="#ff9fc0" stroke="#2a1f3d" stroke-width="1.6"/></svg></div>
-      <div class="of-info"><b>${t('p_piggy')}</b><small>${t('p_piggy_d')}</small><div class="bar"><i style="width:${piggy / PIGGY_MAX * 100}%"></i><span>${t('piggyFill', { n: piggy, m: PIGGY_MAX })}</span></div></div>
-      <button class="btn primary sm ${piggy < PIGGY_MIN_BREAK ? 'off' : ''}" data-buy="${pig.id}">${priceOf(pig)}</button></div>`;
+    const P = (id) => PRODUCTS.find(p => p.id === id);
     const left = G.freeGemsLeft();
-    const free = `<div class="offer free"><div class="of-art">${ic('gem', 'xl')}</div><div class="of-info"><b>${t('freeGems')}</b><small>${left > 0 ? t('freeGemsDesc', { n: FREE_GEMS_PER_AD, r: left }) : t('freeGemsNone')}</small></div>${left > 0 ? `<button class="btn ad sm" data-freegems="1">${ic('play')} +${FREE_GEMS_PER_AD}</button>` : ''}</div>`;
-    const packs = PRODUCTS.filter(p => p.gems).map((p, i) => `<button class="pack ${p.tag ? 'tag-' + p.tag : ''}" data-buy="${p.id}">${p.tag ? `<em>${t(p.tag === 'best' ? 'bestValue' : 'popular')}</em>` : ''}<div class="gems-pile">${Array.from({ length: Math.min(5, i + 1) }, () => ic('gem')).join('')}</div><b>${fmtInt(p.gems)}</b><span>${priceOf(p)}</span></button>`).join('');
-    api.body.innerHTML = `${free}<h3 class="sec">${t('shopSpecial')}</h3>${specials}${piggyCard}<h3 class="sec">${t('shopGems')}</h3><div class="packs">${packs}</div>
+    const free = `<div class="sh-free ${left > 0 ? '' : 'done'}">
+      <div class="sf-art">${ic('gem', 'xl')}<span class="sf-plus">+${FREE_GEMS_PER_AD}</span></div>
+      <div class="sf-info"><b>${t('freeGems')}</b><small>${left > 0 ? t('freeLeft', { r: left, m: FREE_GEMS_ADS_PER_DAY }) : t('freeGemsNone')}</small>
+        <div class="sf-dots">${Array.from({ length: FREE_GEMS_ADS_PER_DAY }, (_, i) => `<i class="${i < FREE_GEMS_ADS_PER_DAY - left ? 'used' : ''}"></i>`).join('')}</div></div>
+      ${left > 0 ? `<button class="btn ad sm pulse" data-freegems="1">${ic('play')} ${t('watchGet')}</button>` : ic('check')}</div>`;
+
+    let starter = '';
+    if (!S.iap.starter) {
+      const ms = S.offers.starterUntil - Date.now();
+      starter = `<div class="sh-hero">
+        <div class="ribbon">${t('starterRibbon')}</div>
+        <div class="hero-top"><div class="hero-art">${equipIconSVG('chair', 4)}</div>
+          <div class="hero-info"><b>${t('p_starter')}</b><span class="value-tag">${t('valueX', { n: 5 })}</span>
+          ${ms > 0 ? `<small class="timer">${ic('clock')} ${t('offerEnds', { t: fmtTime(ms / 1000) })}</small>` : `<small class="timer">${t('onlyOnce')}</small>`}</div></div>
+        <div class="chips"><span>${ic('user')} ${t('eq_chair_4')}</span><span>${ic('gem')} 300</span><span>${ic('rocket')} x2 · 2h</span></div>
+        <button class="btn buy-hero" data-buy="starter_pack">${priceOf(P('starter_pack'))}</button></div>`;
+    }
+
+    const vip = S.iap.removeAds ? '' : `<div class="sh-card vip">
+      <div class="card-art"><div class="crown">👑</div><div class="noads">${ic('play')}</div></div>
+      <div class="card-info"><b>${t('p_remove_ads')}</b><ul><li>${ic('check')} ${t('vipPerk1')}</li><li>${ic('check')} ${t('vipPerk2')}</li></ul></div>
+      <button class="btn gold-btn sm" data-buy="remove_ads">${priceOf(P('remove_ads'))}</button></div>`;
+
+    const goldB = S.iap.goldBoost ? '' : `<div class="sh-card goldb">
+      <div class="card-art"><div class="spin-rays"></div>${ic('gold', 'xl')}<span class="x2">x2</span></div>
+      <div class="card-info"><b>${t('p_gold_boost')}</b><span class="forever">${t('forever')}</span><small>${t('goldPerk')}</small></div>
+      <button class="btn gold-btn sm" data-buy="gold_boost">${priceOf(P('gold_boost'))}</button></div>`;
+
+    const act = G.monthlyActive();
+    const monthly = `<div class="sh-card monthly ${act ? 'active' : ''}">
+      <div class="card-art">${ic('missions', 'xl')}<span class="m30">30</span></div>
+      <div class="card-info"><b>${t('p_monthly')}</b>
+        ${act ? `<small>${t('monthlyActive', { d: new Date(S.iap.monthlyUntil).toLocaleDateString() })}</small>` : `<span class="big-val">${t('monthValue', { n: fmtInt(150 + 40 * 30) })}</span><small>${t('perDay')} · ${t('monthPerks')}</small>`}</div>
+      ${act ? (G.monthlyClaimReady() ? `<button class="btn primary sm pulse" data-monthly="1">${ic('gem')} 40</button>` : ic('check')) : `<button class="btn primary sm" data-buy="monthly_pass">${priceOf(P('monthly_pass'))}</button>`}</div>`;
+
+    const piggy = S.iap.piggy || 0;
+    const fill = piggy / PIGGY_MAX;
+    const canBreak = piggy >= PIGGY_MIN_BREAK;
+    const piggyCard = `<div class="sh-piggy ${canBreak ? 'ready' : ''}">
+      <div class="pg-art">${piggyArt(fill)}${fill >= 1 ? `<span class="pg-full">${t('piggyFull')}</span>` : ''}</div>
+      <div class="pg-info"><b>${t('p_piggy')}</b><small>${t('piggyHow')}</small>
+        <div class="pg-count">${ic('gem')}<b>${fmtInt(piggy)}</b><span>/ ${fmtInt(PIGGY_MAX)}</span></div>
+        <div class="bar pg-bar"><i style="width:${fill * 100}%"></i><em style="left:${PIGGY_MIN_BREAK / PIGGY_MAX * 100}%"></em></div>
+        ${canBreak ? `<button class="btn pig-btn" data-buy="piggy_bank">🔨 ${t('piggyBreak')} · ${priceOf(P('piggy_bank'))}</button>` : `<div class="pg-lock">${ic('lock')} ${t('piggyLocked', { n: PIGGY_MIN_BREAK })}</div>`}</div></div>`;
+
+    const gemPacks = PRODUCTS.filter(p => p.gems);
+    const baseRate = gemPacks[0].gems / parseFloat(String(gemPacks[0].price).replace(/[^\d,]/g, '').replace(',', '.'));
+    const packs = gemPacks.map((p, i) => {
+      const price = parseFloat(String(p.price).replace(/[^\d,]/g, '').replace(',', '.'));
+      const extra = i ? Math.round((p.gems / price / baseRate - 1) * 100) : 0;
+      return `<button class="pack p${i} ${p.tag ? 'tag-' + p.tag : ''}" data-buy="${p.id}">
+        ${p.tag ? `<em class="ptag">${t(p.tag === 'best' ? 'bestValue' : 'bestDeal')}</em>` : ''}
+        <div class="pk-art">${packArt(i)}</div><b>${fmtInt(p.gems)}</b>${extra > 0 ? `<span class="extra">${t('extraPct', { p: extra })}</span>` : ''}<span class="pk-price">${priceOf(p)}</span></button>`;
+    }).join('');
+
+    api.body.innerHTML = `
+      <div class="sh-banner"><div><small>${t('youHave')}</small><b>${ic('gem')} ${fmtInt(S.diamonds)}</b></div><span>${t('shopTag')}</span></div>
+      ${free}${starter}
+      <h3 class="sec">${ic('star')} ${t('shopSpecial')}</h3>
+      ${monthly}${vip}${goldB}${piggyCard}
+      <h3 class="sec">${ic('gem')} ${t('shopGems')}</h3>
+      <div class="packs">${packs}</div>
       <button class="link" data-restore="1">${t('restore')}</button>`;
   };
   const api = modal({ title: t('shop'), icon: ic('bag'), cls: 'shop', body: '' });
   draw(api);
+  const tick = setInterval(() => { const tm = api.el.querySelector('.timer'); if (!api.el.isConnected) { clearInterval(tick); return; } if (tm && S.offers.starterUntil > Date.now()) tm.innerHTML = `${ic('clock')} ${t('offerEnds', { t: fmtTime((S.offers.starterUntil - Date.now()) / 1000) })}`; }, 1000);
   api.body.addEventListener('click', async (e) => {
     const fg = e.target.closest('[data-freegems]');
     if (fg) {
@@ -276,7 +359,6 @@ export function shopModal(onPurchase) {
     if (rs) { onPurchase && onPurchase('restore'); return; }
     const b = e.target.closest('[data-buy]');
     if (b) {
-      if (b.classList.contains('off')) { sfx.error(); return; }
       const p = PRODUCTS.find(x => x.id === b.dataset.buy);
       onPurchase && onPurchase(p, () => { draw(api); });
     }

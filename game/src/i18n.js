@@ -116,6 +116,7 @@ const pt = {
   chest: 'Baú do dia', weekly: 'Meta da semana', weeklyDesc: 'Missões concluídas nesta semana: {n}',
   login: 'Presente diário', loginDay: 'Dia {n}', loginClaim: 'Pegar presente', loginTomorrow: 'Volte amanhã!',
   // shop
+  shopTag: 'Turbine sua carreira!', youHave: 'Você tem', starterRibbon: 'OFERTA DE INICIANTE', valueX: '{n}x mais valor', onlyOnce: 'Só uma vez', forever: 'PARA SEMPRE', vipPerk1: 'Sem anúncios entre telas', vipPerk2: 'Prêmios de anúncio na hora', goldPerk: 'Todo Gold que você ganhar vale o dobro, em todas as carreiras.', monthValue: '{n} 💎 no mês', monthPerks: '+1 passe/dia · +2h offline', perDay: '+40 💎 todo dia', piggyHow: '50% dos diamantes que você ganha jogando caem no cofrinho.', piggyLocked: 'Libera com {n} 💎', piggyBreak: 'Quebrar!', piggyFull: 'CHEIO!', extraPct: '+{p}% extra', freeLeft: '{r} de {m} hoje', watchGet: 'Assistir', subscribe: 'Assinar', bestDeal: 'MAIS VENDIDO',
   shop: 'Loja', shopGems: 'Pacotes de diamantes', shopSpecial: 'Ofertas', restore: 'Restaurar compras', bestValue: 'Melhor valor', popular: 'Popular',
   p_remove_ads: 'VIP Sem Anúncios', p_remove_ads_d: 'Sem anúncios entre telas e todos os prêmios de anúncio na hora, para sempre.',
   p_starter: 'Pacote Iniciante', p_starter_d: 'Cadeira gamer + 300 diamantes + 2h de Gold x2.',
@@ -264,6 +265,7 @@ const en = {
   ms_equip: 'Upgrade a piece of gear or extra', ms_play: 'Play for {n} minutes',
   chest: 'Daily chest', weekly: 'Weekly goal', weeklyDesc: 'Missions completed this week: {n}',
   login: 'Daily gift', loginDay: 'Day {n}', loginClaim: 'Get gift', loginTomorrow: 'Come back tomorrow!',
+  shopTag: 'Boost your career!', youHave: 'You have', starterRibbon: 'STARTER OFFER', valueX: '{n}x more value', onlyOnce: 'One time only', forever: 'FOREVER', vipPerk1: 'No ads between screens', vipPerk2: 'Ad rewards instantly', goldPerk: 'Every Gold you earn is worth double, in every career.', monthValue: '{n} 💎 per month', monthPerks: '+1 pass/day · +2h offline', perDay: '+40 💎 every day', piggyHow: '50% of the diamonds you earn by playing drop into the piggy bank.', piggyLocked: 'Unlocks at {n} 💎', piggyBreak: 'Break it!', piggyFull: 'FULL!', extraPct: '+{p}% extra', freeLeft: '{r} of {m} today', watchGet: 'Watch', subscribe: 'Subscribe', bestDeal: 'BEST SELLER',
   shop: 'Shop', shopGems: 'Diamond packs', shopSpecial: 'Offers', restore: 'Restore purchases', bestValue: 'Best value', popular: 'Popular',
   p_remove_ads: 'VIP No Ads', p_remove_ads_d: 'No ads between screens and every ad reward instantly, forever.',
   p_starter: 'Starter Pack', p_starter_d: 'Gaming chair + 300 diamonds + 2h of Gold x2.',
@@ -387,6 +389,7 @@ const es = {
   ms_equip: 'Mejora un equipo o extra', ms_play: 'Juega {n} minutos',
   chest: 'Cofre del día', weekly: 'Meta semanal', weeklyDesc: 'Misiones completadas esta semana: {n}',
   login: 'Regalo diario', loginDay: 'Día {n}', loginClaim: 'Tomar regalo', loginTomorrow: '¡Vuelve mañana!',
+  shopTag: '¡Impulsa tu carrera!', youHave: 'Tienes', starterRibbon: 'OFERTA INICIAL', valueX: '{n}x más valor', onlyOnce: 'Solo una vez', forever: 'PARA SIEMPRE', vipPerk1: 'Sin anuncios entre pantallas', vipPerk2: 'Premios de anuncio al instante', goldPerk: 'Todo el Oro que ganes vale el doble, en todas las carreras.', monthValue: '{n} 💎 al mes', monthPerks: '+1 pase/día · +2h offline', perDay: '+40 💎 cada día', piggyHow: 'El 50% de los diamantes que ganas jugando cae en la alcancía.', piggyLocked: 'Se libera con {n} 💎', piggyBreak: '¡Romper!', piggyFull: '¡LLENA!', extraPct: '+{p}% extra', freeLeft: '{r} de {m} hoy', watchGet: 'Ver', subscribe: 'Suscribirse', bestDeal: 'MÁS VENDIDO',
   shop: 'Tienda', shopGems: 'Paquetes de diamantes', shopSpecial: 'Ofertas', restore: 'Restaurar compras', bestValue: 'Mejor valor', popular: 'Popular',
   p_remove_ads: 'VIP Sin Anuncios', p_remove_ads_d: 'Sin anuncios entre pantallas y todos los premios de anuncio al instante, para siempre.',
   p_starter: 'Paquete Inicial', p_starter_d: 'Silla gamer + 300 diamantes + 2h de Oro x2.',
