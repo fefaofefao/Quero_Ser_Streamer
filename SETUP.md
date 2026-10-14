@@ -11,7 +11,7 @@ Tudo que falta para ir à Play Store: conectar **AdMob**, **Firebase** e criar o
 | `tools/sim.mjs`, `tools/calibrate.mjs` | Simulador de 150 dias de jogo usado para balancear a economia. |
 | `tools/build-apk-offline.sh` | Build de **teste** sem Gradle (anúncios/compras simulados). |
 | `store/` | Ícone 512, feature graphic, 8 screenshots com legenda, textos da loja. |
-| `privacy.html` | Política de privacidade (PT/EN/ES) — URL: `https://fefaofefao.github.io/streamer-idle/privacy.html` |
+| `privacy.html` | Política de privacidade (PT/EN/ES) — URL: `https://fefaofefao.github.io/quero-ser-streamer/privacy.html` |
 | `web/` | Versão web jogável (demo, compras/anúncios simulados). |
 
 Pacote: `com.fsamplabs.streameridle` · minSdk 24 · targetSdk 36 · versionCode 1.
@@ -81,7 +81,7 @@ service cloud.firestore {
 ## 5. Ficha da loja
 * Textos: `store/listing.md` (PT, EN, ES).
 * Gráficos: `store/icon-512.png`, `store/feature-graphic-1024x500.png`, `store/screenshots/*.png` (1080×1920).
-* Política: `https://fefaofefao.github.io/streamer-idle/privacy.html`
+* Política: `https://fefaofefao.github.io/quero-ser-streamer/privacy.html`
 * **Público-alvo**: marque **13+** (13-15, 16-17, 18+). Marcar menores de 13 cai na política de Famílias e exige SDKs/anúncios certificados.
 * **Classificação**: questionário IARC — sem violência real (os "jogos" no monitor são desenhos), compras no app, anúncios, sem interação entre usuários.
 * **Segurança dos dados** (resumo): coleta *ID de publicidade/dispositivo* (AdMob, publicidade e análise), *interações no app* e *registros de falhas* (Firebase), *nome e e-mail* só se o usuário conectar com Google (funcionalidade, salvamento). Criptografado em trânsito: sim. Usuário pode pedir exclusão: sim (e-mail). Dados não vendidos.

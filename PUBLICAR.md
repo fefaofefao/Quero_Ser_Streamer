@@ -25,7 +25,7 @@ O versionCode é automático (nº do run + 10), sempre maior que o anterior.
 ### Configuração do app (Painel › "Configurar o app")
 | Item | Resposta |
 |---|---|
-| Política de privacidade | `https://fefaofefao.github.io/streamer-idle/privacy.html` (fazer merge da branch na `main` antes) |
+| Política de privacidade | `https://fefaofefao.github.io/quero-ser-streamer/privacy.html` |
 | Acesso ao app | Todo o app disponível sem restrições |
 | Anúncios | **Sim, contém anúncios** |
 | Classificação (IARC) | Categoria Jogo; sem violência realista, sem sexo, sem drogas, sem apostas; **compras digitais: sim**; usuários não interagem; não compartilha localização → resultado esperado Livre/L |

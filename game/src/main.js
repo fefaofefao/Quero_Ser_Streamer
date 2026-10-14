@@ -20,7 +20,7 @@ import { avatarFrontSVG } from './art/avatar.js';
 import { equipIconSVG } from './art/room.js';
 import { PRODUCTS } from './data.js';
 
-const PRIVACY_URL = 'https://fefaofefao.github.io/streamer-idle/privacy.html';
+const PRIVACY_URL = 'https://fefaofefao.github.io/quero-ser-streamer/privacy.html';
 const SUPPORT_MAIL = 'mailto:fe.m.sampaio@hotmail.com?subject=Quero%20ser%20Streamer';
 let S;
 
