@@ -52,17 +52,26 @@ jobs:
           ADMOB_APP_ID: ${{ secrets.ADMOB_APP_ID }}
           ADMOB_REWARDED_ID: ${{ secrets.ADMOB_REWARDED_ID }}
           ADMOB_INTERSTITIAL_ID: ${{ secrets.ADMOB_INTERSTITIAL_ID }}
+          APP_ADS_PUB: pub-7483085200976329   # publisher in fefaofefao.github.io/app-ads.txt
         run: |
           f=android/app/src/main/res/values/ads.xml
-          for k in app_id rewarded_id interstitial_id; do
-            v=$(eval echo "\$ADMOB_$(echo $k | tr a-z A-Z)")
-            if [ -n "$v" ]; then
-              sed -i "s|<string name=\"admob_$k\" translatable=\"false\">[^<]*</string>|<string name=\"admob_$k\" translatable=\"false\">$v</string>|" "$f"
-              echo "admob_$k set"
-            else
-              echo "::warning::ADMOB_$(echo $k | tr a-z A-Z) not set: using Google test id"
-            fi
+          clean() { printf '%s' "$1" | tr -d ' \t\r\n"'"'"; }
+          app=$(clean "$ADMOB_APP_ID"); rew=$(clean "$ADMOB_REWARDED_ID"); int=$(clean "$ADMOB_INTERSTITIAL_ID")
+          if [ -z "$app$rew$int" ]; then echo "::warning::AdMob secrets not set: using Google test ids"; exit 0; fi
+          [[ "$app" =~ ^ca-app-pub-[0-9]{16}~[0-9]{10}$ ]] || { echo "::error::ADMOB_APP_ID must look like ca-app-pub-0000000000000000~0000000000 (with ~)"; exit 1; }
+          [[ "$rew" =~ ^ca-app-pub-[0-9]{16}/[0-9]{10}$ ]] || { echo "::error::ADMOB_REWARDED_ID must look like ca-app-pub-0000000000000000/0000000000 (with /)"; exit 1; }
+          [[ "$int" =~ ^ca-app-pub-[0-9]{16}/[0-9]{10}$ ]] || { echo "::error::ADMOB_INTERSTITIAL_ID must look like ca-app-pub-0000000000000000/0000000000 (with /)"; exit 1; }
+          [ "$rew" != "$int" ] || { echo "::error::Rewarded and interstitial ids are the same ad unit"; exit 1; }
+          pub() { echo "$1" | sed -E 's/^ca-app-pub-([0-9]{16}).*/pub-\1/'; }
+          p=$(pub "$app")
+          [ "$(pub "$rew")" = "$p" ] && [ "$(pub "$int")" = "$p" ] || { echo "::error::The three AdMob ids belong to different publisher accounts"; exit 1; }
+          case "$app$rew$int" in *3940256099942544*) echo "::error::A Google TEST id is set in the secrets"; exit 1;; esac
+          [ "$p" = "$APP_ADS_PUB" ] && echo "publisher $p matches app-ads.txt" || echo "::warning::publisher $p differs from app-ads.txt ($APP_ADS_PUB)"
+          for k in app_id:$app rewarded_id:$rew interstitial_id:$int; do
+            sed -i "s|<string name=\"admob_${k%%:*}\" translatable=\"false\">[^<]*</string>|<string name=\"admob_${k%%:*}\" translatable=\"false\">${k#*:}</string>|" "$f"
           done
+          grep -q 3940256099942544 "$f" && { echo "::error::ads.xml still has test ids"; exit 1; }
+          echo "AdMob ids validated and applied"
 
       - name: Signing key
         env:

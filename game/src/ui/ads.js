@@ -16,6 +16,7 @@ export const ads = {
     if (busy) return false;
     if (S.iap.removeAds) { toast(ic('check') + ' ' + t('noAds')); bridge.log('ad_skip_vip', { placement }); return true; }
     busy = true;
+    if (bridge.isNative && !bridge.rewardedReady()) toast(ic('play') + ' ' + t('adLoading'));
     suspendAudio(true);
     try {
       const r = await bridge.showRewarded(placement);

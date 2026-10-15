@@ -11,6 +11,7 @@ import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.FullScreenContentCallback;
 import com.google.android.gms.ads.LoadAdError;
 import com.google.android.gms.ads.MobileAds;
+import com.google.android.gms.ads.RequestConfiguration;
 import com.google.android.gms.ads.interstitial.InterstitialAd;
 import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback;
 import com.google.android.gms.ads.rewarded.RewardedAd;
@@ -34,6 +35,17 @@ public class Ads {
     private InterstitialAd interstitial;
     private boolean loadingRewarded, loadingInterstitial;
     private int rewardedRetry, interstitialRetry;
+    private long rewardedAt, interstitialAt;
+    // Loaded ads expire after one hour; refresh a bit before that.
+    private static final long AD_TTL_MS = 50L * 60L * 1000L;
+    // A tap on "watch" right after launch waits briefly for the first ad instead of failing.
+    private static final long WAIT_MS = 8000L;
+    private final Runnable retryRewarded = this::loadRewarded;
+    private GameBridge.Reply waiting;
+    private String waitingPlacement;
+    private final Runnable waitTimeout = () -> {
+        if (waiting != null) { GameBridge.Reply r = waiting; waiting = null; r.send(GameBridge.ok(false)); }
+    };
 
     public Ads(Activity activity, GameBridge bridge) {
         this.activity = activity;
@@ -55,6 +67,10 @@ public class Ads {
 
     private void initAds() {
         if (initialized.getAndSet(true)) return;
+        // Audience is 13+: keep ad content at Teen or below.
+        MobileAds.setRequestConfiguration(MobileAds.getRequestConfiguration().toBuilder()
+                .setMaxAdContentRating(RequestConfiguration.MAX_AD_CONTENT_RATING_T)
+                .build());
         new Thread(() -> MobileAds.initialize(activity, status -> main.post(() -> {
             loadRewarded();
             loadInterstitial();
@@ -68,15 +84,21 @@ public class Ads {
             @Override
             public void onAdLoaded(RewardedAd ad) {
                 rewarded = ad;
+                rewardedAt = System.currentTimeMillis();
                 loadingRewarded = false;
                 rewardedRetry = 0;
+                if (waiting != null) {
+                    GameBridge.Reply r = waiting; waiting = null;
+                    main.removeCallbacks(waitTimeout);
+                    showRewarded(waitingPlacement, r);
+                }
             }
 
             @Override
             public void onAdFailedToLoad(LoadAdError error) {
                 loadingRewarded = false;
                 rewardedRetry = Math.min(rewardedRetry + 1, 6);
-                main.postDelayed(Ads.this::loadRewarded, (long) (Math.pow(2, rewardedRetry) * 1000));
+                main.postDelayed(retryRewarded, (long) (Math.pow(2, rewardedRetry) * 1000));
             }
         });
     }
@@ -88,6 +110,7 @@ public class Ads {
             @Override
             public void onAdLoaded(InterstitialAd ad) {
                 interstitial = ad;
+                interstitialAt = System.currentTimeMillis();
                 loadingInterstitial = false;
                 interstitialRetry = 0;
             }
@@ -101,14 +124,24 @@ public class Ads {
         });
     }
 
+    private void dropExpired() {
+        long now = System.currentTimeMillis();
+        if (rewarded != null && now - rewardedAt > AD_TTL_MS) { rewarded = null; loadRewarded(); }
+        if (interstitial != null && now - interstitialAt > AD_TTL_MS) { interstitial = null; loadInterstitial(); }
+    }
+
     public boolean rewardedReady() {
-        return rewarded != null;
+        return rewarded != null && System.currentTimeMillis() - rewardedAt <= AD_TTL_MS;
     }
 
     public void showRewarded(String placement, GameBridge.Reply reply) {
+        dropExpired();
         if (rewarded == null) {
-            reply.send(GameBridge.ok(false));
-            loadRewarded();
+            if (waiting != null || !initialized.get()) { reply.send(GameBridge.ok(false)); loadRewarded(); return; }
+            waiting = reply;
+            waitingPlacement = placement;
+            main.postDelayed(waitTimeout, WAIT_MS);
+            if (!loadingRewarded) { rewardedRetry = 0; main.removeCallbacks(retryRewarded); loadRewarded(); }
             return;
         }
         final boolean[] earned = {false};
@@ -133,6 +166,7 @@ public class Ads {
     }
 
     public void showInterstitial(String placement) {
+        dropExpired();
         if (interstitial == null) {
             loadInterstitial();
             return;
