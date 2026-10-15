@@ -38,13 +38,60 @@ export function cosmeticCatalog() {
   const items = [];
   HAIR_STYLES.forEach((id, i) => items.push({ cat: 'hair', value: i, price: i < 4 ? 0 : [60, 60, 80, 90, 90, 100, 120, 120][i - 4], req: i < 4 ? null : { rank: [400000, 200000, 100000, 50000, 20000, 10000, 5000, 2000][i - 4] } }));
   HAIR_COLORS.forEach((c, i) => items.push({ cat: 'hairColor', value: i, price: i < 6 ? 0 : 50, req: i < 6 ? null : { rank: [300000, 150000, 80000, 30000, 10000, 3000][i - 6] } }));
-  OUTFITS.forEach((id, i) => items.push({ cat: 'outfit', value: i, price: [0, 0, 0, 80, 120, 150, 250, 400][i], req: i < 3 ? null : { rank: [0, 0, 0, 300000, 100000, 20000, 2000, 100][i] } }));
-  HATS.forEach((id, i) => items.push({ cat: 'hat', value: id, price: [0, 40, 60, 60, 70, 150, 80, 1000][i], req: i === 0 ? null : { rank: [0, 450000, 250000, 250000, 120000, 30000, 60000, 1][i] } }));
-  GLASSES.forEach((id, i) => items.push({ cat: 'glasses', value: id, price: [0, 40, 40, 80, 200][i], req: i === 0 ? null : { rank: [0, 350000, 350000, 40000, 1000][i] } }));
+  OUTFITS.slice(0, 8).forEach((id, i) => items.push({ cat: 'outfit', value: i, price: [0, 0, 0, 80, 120, 150, 250, 400][i], req: i < 3 ? null : { rank: [0, 0, 0, 300000, 100000, 20000, 2000, 100][i] } }));
+  HATS.slice(0, 8).forEach((id, i) => items.push({ cat: 'hat', value: id, price: [0, 40, 60, 60, 70, 150, 80, 1000][i], req: i === 0 ? null : { rank: [0, 450000, 250000, 250000, 120000, 30000, 60000, 1][i] } }));
+  GLASSES.slice(0, 5).forEach((id, i) => items.push({ cat: 'glasses', value: id, price: [0, 40, 40, 80, 200][i], req: i === 0 ? null : { rank: [0, 350000, 350000, 40000, 1000][i] } }));
   NECKS.forEach((id, i) => items.push({ cat: 'neck', value: id, price: [0, 150, 300, 60][i], req: i === 0 ? null : { rank: [0, 8000, 500, 150000][i] } }));
   ['none', 'hamster', 'cat', 'dog', 'parrot'].forEach((id, i) => items.push({ cat: 'pet', value: id, price: [0, 120, 200, 200, 300][i], req: i === 0 ? null : { house: [0, 1, 1, 2, 3][i] } }));
   [0, 1, 2, 3].forEach(i => items.push({ cat: 'neon', value: i, price: i ? 50 : 0, req: { house: 3 } }));
-  return items;
+  items.push({ cat: 'theme', value: 'none', price: 0, req: null });
+  return items.concat(premiumCatalog());
+}
+
+// Premium cosmetics: sold only in the weekly shop (or as season pass rewards).
+export const RARITY = { common: 300, rare: 500, epic: 800, legendary: 1200 };
+export const RARITY_ORDER = ['common', 'rare', 'epic', 'legendary'];
+const PREMIUM = [
+  ['outfit', 'racer', 'common'], ['glasses', 'heart', 'common'], ['hat', 'bunnyset', 'common'], ['theme', 'sakura', 'common'],
+  ['outfit', 'varsity', 'rare'], ['glasses', 'visor', 'rare'], ['pet', 'penguin', 'rare'], ['theme', 'snow', 'rare'],
+  ['outfit', 'neonhood', 'epic'], ['hat', 'vr', 'epic'], ['pet', 'robot', 'epic'], ['theme', 'neoncity', 'epic'],
+  ['outfit', 'astro', 'legendary'], ['hat', 'goldset', 'legendary'], ['pet', 'dragon', 'legendary'], ['theme', 'galaxy', 'legendary'],
+];
+// Season pass exclusives, one per season (cycling).
+export const SEASON_ITEMS = [['outfit', 'champion'], ['theme', 'fireworks']];
+let premCache = null;
+export function premiumCatalog() {
+  if (premCache) return premCache;
+  const val = (cat, id) => cat === 'outfit' ? OUTFITS.indexOf(id) : id;
+  premCache = PREMIUM.map(([cat, id, rarity]) => ({ cat, value: val(cat, id), id, rarity, price: RARITY[rarity], premium: true }))
+    .concat(SEASON_ITEMS.map(([cat, id]) => ({ cat, value: val(cat, id), id, rarity: 'legendary', price: 0, premium: true, season: true })));
+  return premCache;
+}
+
+// ---------- Diamond shop (repeatable) ----------
+export const GEM_SHOP = [
+  { id: 'pass', gems: 30, perDay: 3 },                 // extra autograph pass
+  { id: 'x3', gems: 60, min: 60, maxMin: 240 },        // Gold x3 for 1 hour (stacks up to 4h)
+  { id: 'viral', gems: 40, min: 5, mult: 10 },         // viral clip: x10 for 5 minutes
+];
+
+// ---------- Season pass ----------
+export const SEASON = {
+  epoch: Date.UTC(2026, 9, 1), days: 30, tiers: 30, xpPerTier: 500,
+  xp: { mission: 100, chest: 150, event: 60, login: 50, weekly: 100 },
+};
+// Reward for tier i (1..30) on a track ('free' | 'prem').
+export function seasonTier(i, track, seasonId = 0) {
+  if (track === 'free') {
+    if (i % 5 === 0) return { gems: 10 };
+    if (i % 3 === 0) return { boostMin: 30 };
+    return { goldMin: 20 + i * 2 };
+  }
+  if (i === SEASON.tiers) { const [cat, id] = SEASON_ITEMS[seasonId % SEASON_ITEMS.length]; const it = premiumCatalog().find(x => x.season && x.cat === cat && x.id === id); return { item: cosmeticKey(it), gems: 200 }; }
+  if (i % 5 === 0) return { gems: 100 };
+  if (i % 4 === 0) return { pass: 1 };
+  if (i % 3 === 0) return { goldMin: 120 };
+  return { gems: 30 };
 }
 
 export function cosmeticKey(it) { return it.cat + ':' + it.value; }
@@ -79,9 +126,21 @@ export const MISSION_POOL = [
   { id: 'play', base: 5 },
   { id: 'equip', base: 1, gear: true },
 ];
-export const MISSION_GEMS = 10;
-export const CHEST_GEMS = 25;
-export const WEEKLY_TIERS = [{ n: 7, gems: 40 }, { n: 14, gems: 80 }, { n: 21, gems: 150 }];
+// Diamond faucets. Live-tunable from Remote Config ("game_config" -> "eco").
+export const ECO = {
+  missionGems: 5,
+  chestGems: 10,
+  weeklyGems: [20, 40, 80],
+  achMult: 0.5,       // achievements pay half of the table below
+  adGems: 5,          // diamonds per rewarded ad in the shop
+  adGemsPerDay: 5,
+  piggyMax: 900,
+  piggyRate: 0.25,    // share of earned diamonds that also drops in the piggy bank
+  firstBuyMult: 2,    // first purchase of each diamond pack
+};
+export const WEEKLY_TIERS = [{ n: 7 }, { n: 14 }, { n: 21 }];
+export const weeklyGems = (i) => ECO.weeklyGems[i] || 0;
+export const achGems = (a, tier) => Math.max(1, Math.round(a.gems[tier] * ECO.achMult));
 
 // ---------- Daily login (7-day cycle) ----------
 export const LOGIN_REWARDS = [
@@ -106,11 +165,9 @@ export const PRODUCTS = [
   { id: 'gems_large', kind: 'inapp', consumable: true, gems: 1400, price: 'R$ 39,90' },
   { id: 'gems_huge', kind: 'inapp', consumable: true, gems: 3000, price: 'R$ 79,90' },
   { id: 'gems_mega', kind: 'inapp', consumable: true, gems: 8000, price: 'R$ 179,90', tag: 'best' },
+  { id: 'season_pass', kind: 'inapp', consumable: true, special: 'season', price: 'R$ 19,90' },
 ];
-export const PIGGY_MAX = 1500;
 export const PIGGY_MIN_BREAK = 300;
-export const FREE_GEMS_PER_AD = 5;
-export const FREE_GEMS_ADS_PER_DAY = 5;
 export const AD_BOOST_MIN = 30;
 export const AD_BOOST_MAX_MIN = 240;
 export const TIME_WARPS = [{ h: 1, gems: 25 }, { h: 4, gems: 80 }, { h: 12, gems: 200 }];

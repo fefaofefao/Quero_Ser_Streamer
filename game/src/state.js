@@ -23,7 +23,7 @@ export function newState() {
   const now = Date.now();
   return {
     v: VERSION, created: now, lastSeen: now, lastTick: now,
-    profile: { name: '', channel: '', avatar: defaultAvatar(), pet: 'none', neonColor: 0, verified: false },
+    profile: { name: '', channel: '', avatar: defaultAvatar(), pet: 'none', neonColor: 0, theme: 'none', verified: false },
     owned: {},                 // cosmetics bought: { 'hair:5': true }
     gold: 0, goldRun: 0, goldAll: 0,
     fame: 0, fameAll: 0,
@@ -34,7 +34,7 @@ export function newState() {
     equip: { pc: 1, monitor: 1, mouse: 1, mousepad: 1, chair: 1, webcam: 1 },
     extras: { mic: 0, rgb: 0, green: 0, guest: 0, pool: 0 },
     talents: {},
-    boosts: { x2Until: 0, clipUntil: 0, clipMult: 7 },
+    boosts: { x2Until: 0, x3Until: 0, clipUntil: 0, clipMult: 7 },
     hype: 0,
     plaques: 0, bestRank: 10_000_000,
     autograph: { day: '', passes: 3, extraUsed: false, best: 0 },
@@ -44,7 +44,8 @@ export function newState() {
     ads: { day: '', gems: 0, boost: 0 },
     achievements: {},          // id -> tiers claimed count
     stats: { taps: 0, upgrades: 0, community: 0, signed: 0, events: 0, clips: 0, missions: 0, playSec: 0, days: 0 },
-    iap: { removeAds: false, starter: false, goldBoost: false, monthlyUntil: 0, monthlyClaim: '', piggy: 0 },
+    iap: { removeAds: false, starter: false, goldBoost: false, monthlyUntil: 0, monthlyClaim: '', piggy: 0, firsts: {} },
+    season: null,
     settings: { music: true, sfx: true, vibration: true, notifications: true, lang: 'auto', numbers: 'short' },
     tutorial: 0, introDone: false, letters: {},
     offers: { starterUntil: 0 },

@@ -212,6 +212,7 @@ export function goldMultBase(s) {
 export function boostMult(s, now) {
   let m = 1;
   if (s.boosts && s.boosts.x2Until > now) m *= 2;
+  if (s.boosts && s.boosts.x3Until > now) m *= 3;
   if (s.boosts && s.boosts.clipUntil > now) m *= (s.boosts.clipMult || 7);
   return m;
 }

@@ -56,6 +56,7 @@ Onde aparecem anúncios: dobrar ganho offline, passe extra de autógrafo, dobrar
 | `gems_large` | consumível | R$ 39,90 | 1.400💎 |
 | `gems_huge` | consumível | R$ 79,90 | 3.000💎 |
 | `gems_mega` | consumível | R$ 179,90 | 8.000💎 |
+| `season_pass` | consumível | R$ 19,90 | Libera a trilha Premium da temporada atual (30 dias) |
 | `monthly_pass` | **Assinatura** (plano base mensal, renovação automática) | R$ 14,90/mês | +150💎 na hora, +40💎/dia, +1 passe de autógrafo, +2h offline |
 
 Os preços mostrados no jogo vêm do Play (moeda local). Compras pendentes, reembolsos de consumíveis e "Restaurar compras" já são tratados. Os produtos só aparecem depois que um build assinado estiver em alguma trilha (teste interno serve).
@@ -75,7 +76,7 @@ service cloud.firestore {
   }
 }
 ```
-5. **Remote Config** (opcional): parâmetro `game_config` (JSON), ex. `{"gold":1.2,"fame":1,"offline":1,"event":1}` — multiplicadores para balancear ao vivo sem atualizar o app.
+5. **Remote Config** (opcional): parâmetro `game_config` (JSON), ex. `{"gold":1.2,"fame":1,"offline":1,"event":1,"eco":{"missionGems":5,"chestGems":10}}` — multiplicadores e valores de diamante para balancear ao vivo sem atualizar o app.
 6. Analytics registra: `tutorial_begin`, `market_unlock`, `house_buy`, `rebirth`, `equip_upgrade`, `autograph_done`, `ad_rewarded`, `purchase`, `iap_*`.
 
 ## 5. Ficha da loja

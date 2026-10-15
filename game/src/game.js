@@ -2,8 +2,8 @@
 import * as E from './economy.js';
 import { dayKey, weekKey } from './state.js';
 import {
-  ACHIEVEMENTS, MISSION_POOL, MISSION_GEMS, CHEST_GEMS, WEEKLY_TIERS, LOGIN_REWARDS, PLAQUES, PIGGY_MAX,
-  AD_BOOST_MIN, AD_BOOST_MAX_MIN, FREE_GEMS_PER_AD, FREE_GEMS_ADS_PER_DAY,
+  ACHIEVEMENTS, MISSION_POOL, WEEKLY_TIERS, LOGIN_REWARDS, PLAQUES, ECO, weeklyGems, achGems,
+  AD_BOOST_MIN, AD_BOOST_MAX_MIN, GEM_SHOP, SEASON, seasonTier, premiumCatalog, cosmeticKey,
 } from './data.js';
 
 export let S = null;
@@ -32,8 +32,9 @@ export function addGems(n, source) {
 }
 
 function piggyFeed(n) {
-  // The piggy bank collects 50% extra of diamonds earned by playing.
-  S.iap.piggy = Math.min(PIGGY_MAX, (S.iap.piggy || 0) + Math.ceil(n * 0.5));
+  // The piggy bank collects a share of the diamonds earned by playing (never shrinks old saves).
+  const cur = S.iap.piggy || 0;
+  S.iap.piggy = Math.max(cur, Math.min(ECO.piggyMax, cur + Math.ceil(n * ECO.piggyRate)));
 }
 
 export function tick(dt) {
@@ -223,8 +224,8 @@ export function addBoost(min) {
 }
 export function boostLeft() { return Math.max(0, (S.boosts.x2Until - now()) / 1000); }
 export function canAdBoost() { return boostLeft() < (AD_BOOST_MAX_MIN - AD_BOOST_MIN) * 60; }
-export function freeGemsLeft() { resetDaily(); return FREE_GEMS_ADS_PER_DAY - S.ads.gems; }
-export function grantFreeGems() { S.ads.gems++; addGems(FREE_GEMS_PER_AD, 'ad'); }
+export function freeGemsLeft() { resetDaily(); return Math.max(0, ECO.adGemsPerDay - S.ads.gems); }
+export function grantFreeGems() { S.ads.gems++; addGems(ECO.adGems, 'ad'); }
 export function adBoostMinutes() { return AD_BOOST_MIN; }
 
 // ---------- golden clips / donations / raids ----------
@@ -256,6 +257,7 @@ export function resetAutographDay() {
     S.autograph.day = d;
     S.autograph.passes = maxPasses();
     S.autograph.extraUsed = false;
+    S.autograph.bought = 0;
   }
 }
 export function maxPasses() { return 3 + (monthlyActive() ? 1 : 0); }
@@ -281,6 +283,7 @@ export function finishAutograph(res, mult = 1) {
   if (res.gems) { addGems(res.gems, 'fan'); piggyFeed(res.gems); }
   S.stats.events++;
   progressMission('event', 1);
+  addSeasonXp(SEASON.xp.event);
 }
 
 // ---------- daily: login, missions, weekly ----------
@@ -341,9 +344,10 @@ export function claimMission(i) {
   const m = S.daily.missions[i];
   if (!m || m.claimed || m.progress < m.target) return false;
   m.claimed = true;
-  addGems(MISSION_GEMS, 'mission'); piggyFeed(MISSION_GEMS);
+  addGems(ECO.missionGems, 'mission'); piggyFeed(ECO.missionGems);
   S.stats.missions++;
   S.weekly.done++;
+  addSeasonXp(SEASON.xp.mission);
   return true;
 }
 export function chestReady() { return !S.daily.chest && S.daily.missions.length && S.daily.missions.every(m => m.claimed); }
@@ -351,15 +355,18 @@ export function claimChest() {
   if (!chestReady()) return null;
   S.daily.chest = true;
   const gold = Math.max(1000, E.gpsNoBoost(S) * 900);
-  addGems(CHEST_GEMS, 'chest'); piggyFeed(CHEST_GEMS); addGold(gold);
-  return { gems: CHEST_GEMS, gold };
+  addGems(ECO.chestGems, 'chest'); piggyFeed(ECO.chestGems); addGold(gold);
+  addSeasonXp(SEASON.xp.chest);
+  return { gems: ECO.chestGems, gold };
 }
 export function claimWeekly(i) {
   const tier = WEEKLY_TIERS[i];
   if (!tier || S.weekly.claimed.includes(i) || S.weekly.done < tier.n) return false;
   S.weekly.claimed.push(i);
-  addGems(tier.gems, 'weekly'); piggyFeed(tier.gems);
-  return true;
+  const g = weeklyGems(i);
+  addGems(g, 'weekly'); piggyFeed(g);
+  addSeasonXp(SEASON.xp.weekly);
+  return g;
 }
 export function loginReward() { return LOGIN_REWARDS[S.login.cycle]; }
 export function claimLogin() {
@@ -368,6 +375,7 @@ export function claimLogin() {
   S.login.claimedToday = true;
   const out = { ...r };
   if (r.gems) { addGems(r.gems, 'login'); piggyFeed(r.gems); }
+  addSeasonXp(SEASON.xp.login);
   if (r.goldMin) { out.gold = Math.max(500, E.gpsNoBoost(S) * r.goldMin * 60); addGold(out.gold); }
   if (r.boostMin) addBoost(r.boostMin);
   return out;
@@ -395,7 +403,7 @@ export function achievementState(a) {
 export function claimAchievement(a) {
   const st = achievementState(a);
   if (!st.done) return 0;
-  const gems = a.gems[st.claimed];
+  const gems = achGems(a, st.claimed);
   S.achievements[a.id] = st.claimed + 1;
   addGems(gems, 'achievement'); piggyFeed(gems);
   return gems;
@@ -416,9 +424,17 @@ export function updateRank() {
 }
 
 // ---------- shop grants ----------
+export function isFirstBuy(id) { return !(S.iap.firsts && S.iap.firsts[id]); }
 export function grantProduct(p) {
-  if (p.gems) addGems(p.gems, 'iap');
+  let gems = 0;
+  if (p.gems) {
+    gems = p.gems * (isFirstBuy(p.id) ? ECO.firstBuyMult : 1);
+    S.iap.firsts = S.iap.firsts || {};
+    S.iap.firsts[p.id] = true;
+    addGems(gems, 'iap');
+  }
   switch (p.special) {
+    case 'season': resetSeason(); S.season.premium = true; break;
     case 'removeAds': S.iap.removeAds = true; break;
     case 'goldBoost': S.iap.goldBoost = true; break;
     case 'starter':
@@ -435,6 +451,7 @@ export function grantProduct(p) {
       addGems(S.iap.piggy || 0, 'piggy'); S.iap.piggy = 0;
       break;
   }
+  return gems;
 }
 export function monthlyClaimReady() { return monthlyActive() && S.iap.monthlyClaim !== dayKey(); }
 export function claimMonthly() {
@@ -450,4 +467,103 @@ export function timeWarp(h, gems) {
   addGold(v);
   addFame(E.famePerSec(S) * h * 3600);
   return v;
+}
+
+// ---------- diamond shop: repeatable boosts ----------
+const MIN = 60000;
+export function gemShopState(id) {
+  const it = GEM_SHOP.find(x => x.id === id);
+  if (!it) return 'none';
+  resetDaily();
+  if (id === 'pass' && (S.autograph.bought || 0) >= it.perDay) return 'limit';
+  if (id === 'x3' && x3Left() >= it.maxMin * 60 - 1) return 'limit';
+  if (S.diamonds < it.gems) return 'cost';
+  return 'ok';
+}
+export function buyGemShop(id) {
+  const it = GEM_SHOP.find(x => x.id === id);
+  if (gemShopState(id) !== 'ok') return false;
+  S.diamonds -= it.gems;
+  const t = now();
+  if (id === 'pass') { S.autograph.passes++; S.autograph.bought = (S.autograph.bought || 0) + 1; }
+  if (id === 'x3') S.boosts.x3Until = Math.min(t + it.maxMin * MIN, Math.max(t, S.boosts.x3Until || 0) + it.min * MIN);
+  if (id === 'viral') { S.boosts.clipUntil = t + it.min * MIN; S.boosts.clipMult = it.mult; S.stats.clips++; progressMission('clips', 1); }
+  emit('gemshop', { id });
+  return true;
+}
+export function x3Left() { return Math.max(0, ((S.boosts.x3Until || 0) - now()) / 1000); }
+
+// ---------- weekly premium cosmetics ----------
+// mulberry32 over an FNV hash of the week key: well spread even for consecutive weeks
+function seeded(str) {
+  let h = 2166136261;
+  for (let i = 0; i < str.length; i++) h = Math.imul(h ^ str.charCodeAt(i), 16777619);
+  let a = h >>> 0;
+  return () => { a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+}
+export function weeklyShop() {
+  const rnd = seeded('qss-week-' + weekKey());
+  const pool = premiumCatalog().filter(i => !i.season);
+  const pick = (rar) => { const c = pool.filter(i => rar.includes(i.rarity)); return c[Math.floor(rnd() * c.length)]; };
+  return [pick(['common', 'rare']), pick(['epic']), pick(['legendary'])].filter(Boolean);
+}
+export function weeklyShopEnds() {
+  const d = new Date(); const m = new Date(d.getFullYear(), d.getMonth(), d.getDate() + ((8 - d.getDay()) % 7 || 7));
+  return m - d;
+}
+export function buyCosmetic(it) {
+  const k = cosmeticKey(it);
+  if (S.owned[k]) return 'owned';
+  if (S.diamonds < it.price) return 'cost';
+  S.diamonds -= it.price;
+  S.owned[k] = true;
+  // wear it right away
+  if (it.cat === 'pet' || it.cat === 'theme') S.profile[it.cat] = it.value;
+  else S.profile.avatar[it.cat] = it.value;
+  emit('cosmetic', it);
+  return 'ok';
+}
+
+// ---------- season pass ----------
+export function seasonIndex(t = now()) { return Math.max(0, Math.floor((t - SEASON.epoch) / (SEASON.days * 86400000))); }
+export function seasonEndsIn() { return SEASON.epoch + (seasonIndex() + 1) * SEASON.days * 86400000 - now(); }
+export function resetSeason() {
+  const id = seasonIndex();
+  if (!S.season || S.season.id !== id) S.season = { id, xp: 0, premium: false, free: [], prem: [] };
+  return S.season;
+}
+export function addSeasonXp(n) {
+  if (!S || !n) return;
+  const se = resetSeason();
+  const before = seasonLevel();
+  se.xp += n;
+  if (seasonLevel() > before) emit('seasonTier', seasonLevel());
+}
+export function seasonLevel() { return Math.min(SEASON.tiers, Math.floor((S.season ? S.season.xp : 0) / SEASON.xpPerTier)); }
+export function seasonClaimable() {
+  const se = resetSeason(); const lv = seasonLevel();
+  let n = 0;
+  for (let i = 1; i <= lv; i++) {
+    if (!se.free.includes(i)) n++;
+    if (se.premium && !se.prem.includes(i)) n++;
+  }
+  return n;
+}
+export function claimSeason(i, track) {
+  const se = resetSeason();
+  if (i > seasonLevel() || i < 1) return null;
+  const list = track === 'prem' ? se.prem : se.free;
+  if (track === 'prem' && !se.premium) return null;
+  if (list.includes(i)) return null;
+  list.push(i);
+  const r = seasonTier(i, track, se.id);
+  grantSeasonReward(r);
+  return r;
+}
+function grantSeasonReward(r) {
+  if (r.gems) addGems(r.gems, 'season');
+  if (r.goldMin) { r.gold = Math.max(500, E.gpsNoBoost(S) * r.goldMin * 60); addGold(r.gold); }
+  if (r.boostMin) addBoost(r.boostMin);
+  if (r.pass) S.autograph.passes += r.pass;
+  if (r.item) { S.owned[r.item] = true; emit('cosmetic', { key: r.item }); }
 }

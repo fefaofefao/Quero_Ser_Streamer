@@ -11,7 +11,8 @@ import { avatarFrontSVG } from '../art/avatar.js';
 import { sfx } from '../audio.js';
 import { confetti, sparkles, coinBurst } from './fx.js';
 import { bridge } from '../bridge.js';
-import { ACHIEVEMENTS, LOGIN_REWARDS, PRODUCTS, PIGGY_MAX, PIGGY_MIN_BREAK, FREE_GEMS_PER_AD, FREE_GEMS_ADS_PER_DAY, WEEKLY_TIERS, TIME_WARPS } from '../data.js';
+import { ACHIEVEMENTS, LOGIN_REWARDS, PRODUCTS, PIGGY_MIN_BREAK, WEEKLY_TIERS, TIME_WARPS, ECO, weeklyGems, achGems, GEM_SHOP, SEASON, seasonTier, premiumCatalog, cosmeticKey } from '../data.js';
+import { petSVG, themeThumb } from '../art/room.js';
 import { ads } from './ads.js';
 
 const ctr = (el) => { const r = el.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; };
@@ -80,13 +81,13 @@ export function missionsModal() {
       const ready = !m.claimed && p >= 1;
       return `<div class="mission ${m.claimed ? 'done' : ''} ${ready ? 'ready' : ''}">
         <div class="ms-main"><b>${missionText(m)}</b><div class="bar"><i style="width:${p * 100}%"></i><span>${m.id === 'gold' ? fmt(m.progress) + '/' + fmt(m.target) : Math.floor(m.progress) + '/' + Math.ceil(m.target)}</span></div></div>
-        ${m.claimed ? ic('check') : ready ? `<button class="btn primary sm" data-claim="${i}">${ic('gem')}10</button>` : (S.daily.rerolls < 1 ? `<button class="btn ghost sm" data-reroll="${i}">${ic('play')} ${t('reroll')}</button>` : `<span class="ms-gem">${ic('gem')}10</span>`)}
+        ${m.claimed ? ic('check') : ready ? `<button class="btn primary sm" data-claim="${i}">${ic('gem')}${ECO.missionGems}</button>` : (S.daily.rerolls < 1 ? `<button class="btn ghost sm" data-reroll="${i}">${ic('play')} ${t('reroll')}</button>` : `<span class="ms-gem">${ic('gem')}${ECO.missionGems}</span>`)}
       </div>`;
     }).join('');
     const chestReady = G.chestReady();
-    const weekly = WEEKLY_TIERS.map((w, i) => `<button class="wk ${S.weekly.claimed.includes(i) ? 'got' : S.weekly.done >= w.n ? 'ready' : ''}" data-week="${i}"><b>${w.n}</b>${ic('gem')}<small>${w.gems}</small></button>`).join('');
+    const weekly = WEEKLY_TIERS.map((w, i) => `<button class="wk ${S.weekly.claimed.includes(i) ? 'got' : S.weekly.done >= w.n ? 'ready' : ''}" data-week="${i}"><b>${w.n}</b>${ic('gem')}<small>${weeklyGems(i)}</small></button>`).join('');
     api.body.innerHTML = `${rows}
-      <div class="chest ${chestReady ? 'ready' : ''} ${S.daily.chest ? 'got' : ''}" data-chest="1">${ic('gift')}<div><b>${t('chest')}</b><small>${t('missionsAll')}</small></div>${S.daily.chest ? ic('check') : `<span>${ic('gem')}25 + ${ic('gold')}</span>`}</div>
+      <div class="chest ${chestReady ? 'ready' : ''} ${S.daily.chest ? 'got' : ''}" data-chest="1">${ic('gift')}<div><b>${t('chest')}</b><small>${t('missionsAll')}</small></div>${S.daily.chest ? ic('check') : `<span>${ic('gem')}${ECO.chestGems} + ${ic('gold')}</span>`}</div>
       <h3 class="sec">${t('weekly')}</h3><p class="small muted">${t('weeklyDesc', { n: S.weekly.done })}</p>
       <div class="weekly"><div class="bar"><i style="width:${Math.min(100, S.weekly.done / 21 * 100)}%"></i></div>${weekly}</div>`;
   };
@@ -94,13 +95,13 @@ export function missionsModal() {
   draw(api);
   api.body.addEventListener('click', (e) => {
     const c = e.target.closest('[data-claim]');
-    if (c) { if (G.claimMission(+c.dataset.claim)) { sfx.coin(); gemsBurst(c, 10); draw(api); } return; }
+    if (c) { if (G.claimMission(+c.dataset.claim)) { sfx.coin(); gemsBurst(c, ECO.missionGems); draw(api); } return; }
     const r = e.target.closest('[data-reroll]');
     if (r) { ads.rewarded('mission_reroll').then(ok => { if (ok) { G.rerollMission(+r.dataset.reroll); draw(api); } }); return; }
     const ch = e.target.closest('[data-chest]');
     if (ch && G.chestReady()) { const res = G.claimChest(); sfx.levelUp(); gemsBurst(ch, res.gems); goldBurst(ch); confetti(40); draw(api); return; }
     const w = e.target.closest('[data-week]');
-    if (w && G.claimWeekly(+w.dataset.week)) { sfx.levelUp(); gemsBurst(w, 40); draw(api); }
+    if (w) { const g = G.claimWeekly(+w.dataset.week); if (g) { sfx.levelUp(); gemsBurst(w, g); draw(api); } }
   });
 }
 
@@ -120,7 +121,7 @@ export function achievementsModal() {
       const p = a.rank ? (st.v <= st.tier ? 1 : Math.max(0, 1 - Math.log10(st.v / st.tier) / 2)) : Math.min(1, st.v / st.tier);
       const prog = a.rank ? '#' + fmtInt(st.v) : a.big ? fmt(st.v) + '/' + fmt(st.tier) : fmtInt(Math.min(st.v, st.tier)) + '/' + fmtInt(st.tier);
       return `<div class="ach ${st.done ? 'ready' : ''}"><div class="ach-ic">${ic('trophy')}</div><div class="ach-main"><b>${t('ach_' + a.id)}</b><small>${label(a, st.tier)}</small><div class="bar"><i style="width:${p * 100}%"></i><span>${prog}</span></div><div class="pips">${tiers}</div></div>
-        ${st.done ? `<button class="btn primary sm" data-ach="${a.id}">${ic('gem')}${a.gems[st.claimed]}</button>` : `<span class="ms-gem">${ic('gem')}${a.gems[st.claimed]}</span>`}</div>`;
+        ${st.done ? `<button class="btn primary sm" data-ach="${a.id}">${ic('gem')}${achGems(a, st.claimed)}</button>` : `<span class="ms-gem">${ic('gem')}${achGems(a, st.claimed)}</span>`}</div>`;
     }).join('');
   };
   const api = modal({ title: t('achievements'), icon: ic('trophy'), cls: 'achievements', body: '' });
@@ -280,9 +281,9 @@ export function shopModal(onPurchase) {
     const P = (id) => PRODUCTS.find(p => p.id === id);
     const left = G.freeGemsLeft();
     const free = `<div class="sh-free ${left > 0 ? '' : 'done'}">
-      <div class="sf-art">${ic('gem', 'xl')}<span class="sf-plus">+${FREE_GEMS_PER_AD}</span></div>
-      <div class="sf-info"><b>${t('freeGems')}</b><small>${left > 0 ? t('freeLeft', { r: left, m: FREE_GEMS_ADS_PER_DAY }) : t('freeGemsNone')}</small>
-        <div class="sf-dots">${Array.from({ length: FREE_GEMS_ADS_PER_DAY }, (_, i) => `<i class="${i < FREE_GEMS_ADS_PER_DAY - left ? 'used' : ''}"></i>`).join('')}</div></div>
+      <div class="sf-art">${ic('gem', 'xl')}<span class="sf-plus">+${ECO.adGems}</span></div>
+      <div class="sf-info"><b>${t('freeGems')}</b><small>${left > 0 ? t('freeLeft', { r: left, m: ECO.adGemsPerDay }) : t('freeGemsNone')}</small>
+        <div class="sf-dots">${Array.from({ length: ECO.adGemsPerDay }, (_, i) => `<i class="${i < ECO.adGemsPerDay - left ? 'used' : ''}"></i>`).join('')}</div></div>
       ${left > 0 ? `<button class="btn ad sm pulse" data-freegems="1">${ic('play')} ${t('watchGet')}</button>` : ic('check')}</div>`;
 
     let starter = '';
@@ -315,44 +316,84 @@ export function shopModal(onPurchase) {
       ${act ? (G.monthlyClaimReady() ? `<button class="btn primary sm pulse" data-monthly="1">${ic('gem')} 40</button>` : ic('check')) : `<button class="btn primary sm" data-buy="monthly_pass">${priceOf(P('monthly_pass'))}</button>`}</div>`;
 
     const piggy = S.iap.piggy || 0;
-    const fill = piggy / PIGGY_MAX;
+    const pmax = Math.max(ECO.piggyMax, piggy);
+    const fill = piggy / pmax;
     const canBreak = piggy >= PIGGY_MIN_BREAK;
     const piggyCard = `<div class="sh-piggy ${canBreak ? 'ready' : ''}">
       <div class="pg-art">${piggyArt(fill)}${fill >= 1 ? `<span class="pg-full">${t('piggyFull')}</span>` : ''}</div>
-      <div class="pg-info"><b>${t('p_piggy')}</b><small>${t('piggyHow')}</small>
-        <div class="pg-count">${ic('gem')}<b>${fmtInt(piggy)}</b><span>/ ${fmtInt(PIGGY_MAX)}</span></div>
-        <div class="bar pg-bar"><i style="width:${fill * 100}%"></i><em style="left:${PIGGY_MIN_BREAK / PIGGY_MAX * 100}%"></em></div>
+      <div class="pg-info"><b>${t('p_piggy')}</b><small>${t('piggyHow', { p: Math.round(ECO.piggyRate * 100) })}</small>
+        <div class="pg-count">${ic('gem')}<b>${fmtInt(piggy)}</b><span>/ ${fmtInt(pmax)}</span></div>
+        <div class="bar pg-bar"><i style="width:${fill * 100}%"></i><em style="left:${PIGGY_MIN_BREAK / pmax * 100}%"></em></div>
         ${canBreak ? `<button class="btn pig-btn" data-buy="piggy_bank">🔨 ${t('piggyBreak')} · ${priceOf(P('piggy_bank'))}</button>` : `<div class="pg-lock">${ic('lock')} ${t('piggyLocked', { n: PIGGY_MIN_BREAK })}</div>`}</div></div>`;
 
     const gemPacks = PRODUCTS.filter(p => p.gems);
+    const weekly = weeklySection();
+    const accel = accelSection();
+    const season = seasonCard();
     const baseRate = gemPacks[0].gems / parseFloat(String(gemPacks[0].price).replace(/[^\d,]/g, '').replace(',', '.'));
     const packs = gemPacks.map((p, i) => {
       const price = parseFloat(String(p.price).replace(/[^\d,]/g, '').replace(',', '.'));
       const extra = i ? Math.round((p.gems / price / baseRate - 1) * 100) : 0;
-      return `<button class="pack p${i} ${p.tag ? 'tag-' + p.tag : ''}" data-buy="${p.id}">
-        ${p.tag ? `<em class="ptag">${t(p.tag === 'best' ? 'bestValue' : 'bestDeal')}</em>` : ''}
-        <div class="pk-art">${packArt(i)}</div><b>${fmtInt(p.gems)}</b>${extra > 0 ? `<span class="extra">${t('extraPct', { p: extra })}</span>` : ''}<span class="pk-price">${priceOf(p)}</span></button>`;
+      const first = G.isFirstBuy(p.id) && ECO.firstBuyMult > 1;
+      return `<button class="pack p${i} ${p.tag ? 'tag-' + p.tag : ''} ${first ? 'first' : ''}" data-buy="${p.id}">
+        ${first ? `<em class="first-tag">${t('firstBuy', { m: ECO.firstBuyMult })}</em>` : p.tag ? `<em class="ptag">${t(p.tag === 'best' ? 'bestValue' : 'bestDeal')}</em>` : ''}
+        <div class="pk-art">${packArt(i)}</div>${first ? `<s class="was">${fmtInt(p.gems)}</s>` : ''}<b>${fmtInt(p.gems * (first ? ECO.firstBuyMult : 1))}</b>${extra > 0 ? `<span class="extra">${t('extraPct', { p: extra })}</span>` : ''}<span class="pk-price">${priceOf(p)}</span></button>`;
     }).join('');
 
     api.body.innerHTML = `
       <div class="sh-banner"><div><small>${t('youHave')}</small><b>${ic('gem')} ${fmtInt(S.diamonds)}</b></div><span>${t('shopTag')}</span></div>
       ${free}${starter}
-      <h3 class="sec">${ic('star')} ${t('shopSpecial')}</h3>
-      ${monthly}${vip}${goldB}${piggyCard}
+      ${season}
+      <h3 class="sec">${ic('bag')} ${t('weeklyShop')}<span class="sec-timer" data-weekly-t="1">${ic('clock')} ${fmtTime(G.weeklyShopEnds() / 1000)}</span></h3>
+      ${weekly}
       <h3 class="sec">${ic('gem')} ${t('shopGems')}</h3>
       <div class="packs">${packs}</div>
+      <h3 class="sec">${ic('rocket')} ${t('accelerate')}</h3>
+      ${accel}
+      <h3 class="sec">${ic('star')} ${t('shopSpecial')}</h3>
+      ${monthly}${vip}${goldB}${piggyCard}
       <button class="link" data-restore="1">${t('restore')}</button>`;
   };
   const api = modal({ title: t('shop'), icon: ic('bag'), cls: 'shop', body: '' });
   draw(api);
-  const tick = setInterval(() => { const tm = api.el.querySelector('.timer'); if (!api.el.isConnected) { clearInterval(tick); return; } if (tm && S.offers.starterUntil > Date.now()) tm.innerHTML = `${ic('clock')} ${t('offerEnds', { t: fmtTime((S.offers.starterUntil - Date.now()) / 1000) })}`; }, 1000);
+  const tick = setInterval(() => {
+    if (!api.el.isConnected) { clearInterval(tick); return; }
+    const tm = api.el.querySelector('.timer');
+    if (tm && S.offers.starterUntil > Date.now()) tm.innerHTML = `${ic('clock')} ${t('offerEnds', { t: fmtTime((S.offers.starterUntil - Date.now()) / 1000) })}`;
+    const wt = api.el.querySelector('[data-weekly-t]');
+    if (wt) wt.innerHTML = `${ic('clock')} ${fmtTime(G.weeklyShopEnds() / 1000)}`;
+  }, 1000);
   api.body.addEventListener('click', async (e) => {
     const fg = e.target.closest('[data-freegems]');
     if (fg) {
       const ok = await ads.rewarded('free_gems');
-      if (ok) { G.grantFreeGems(); sfx.coin(); gemsBurst(fg, FREE_GEMS_PER_AD); draw(api); }
+      if (ok) { G.grantFreeGems(); sfx.coin(); gemsBurst(fg, ECO.adGems); draw(api); }
       return;
     }
+    const cw = e.target.closest('[data-cos]');
+    if (cw) {
+      const it = premiumCatalog().find(x => cosmeticKey(x) === cw.dataset.cos);
+      if (!it || S.owned[cosmeticKey(it)]) return;
+      confirmBox(`${cosPreview(it, 'cf')}<b class="rar-name rar-${it.rarity}">${t('rarity_' + it.rarity)}</b><br>${t('confirmBuyGems', { n: fmtInt(it.price) })}`, () => {
+        const r = G.buyCosmetic(it);
+        if (r === 'cost') { toast(ic('gem') + ' ' + t('notEnough')); return; }
+        sfx.levelUp(); confetti(60); toast(ic('shirt') + ' ' + t('cosBought'));
+        draw(api); onPurchase && onPurchase('cosmetic');
+      });
+      return;
+    }
+    const gs = e.target.closest('[data-gs]');
+    if (gs) {
+      const id = gs.dataset.gs, st = G.gemShopState(id);
+      if (st === 'cost') { sfx.error(); toast(ic('gem') + ' ' + t('notEnough')); return; }
+      if (st !== 'ok') { sfx.error(); return; }
+      if (G.buyGemShop(id)) { sfx.levelUp(); const [x, y] = ctr(gs); sparkles(x, y, 16); toast(gemShopToast(id)); draw(api); }
+      return;
+    }
+    const wp = e.target.closest('[data-warp]');
+    if (wp) { warpModal(+wp.dataset.warp); return; }
+    const sp = e.target.closest('[data-season]');
+    if (sp) { seasonModal(onPurchase); return; }
     const mo = e.target.closest('[data-monthly]');
     if (mo) { if (G.claimMonthly()) { sfx.coin(); gemsBurst(mo, 40); draw(api); } return; }
     const rs = e.target.closest('[data-restore]');
@@ -392,4 +433,114 @@ export function boostModal() {
     body: `<div class="boost-art">${ic('rocket', 'xl')}<b>x2</b></div><p class="center">${t('boostDesc')}</p>${left > 0 ? `<p class="center"><b>${t('boostActive', { t: fmtTime(left) })}</b></p>` : ''}`,
     buttons: G.canAdBoost() ? [{ label: `${ic('play')} +30 min`, cls: 'ad', onClick: () => { ads.rewarded('boost_x2').then(ok => { if (ok) { G.addBoost(G.adBoostMinutes()); sfx.levelUp(); toast(ic('rocket') + ' ' + t('boostActive', { t: fmtTime(G.boostLeft()) })); } }); } }] : [{ label: t('ok'), cls: 'ghost' }],
   });
+}
+
+// ---------------- premium cosmetics ----------------
+export function cosPreview(it, cls = '') {
+  let art = '';
+  if (it.cat === 'pet') art = `<svg viewBox="-34 -50 68 60">${petSVG(it.value, 0, 6)}</svg>`;
+  else if (it.cat === 'theme') art = themeThumb(it.value);
+  else art = avatarFrontSVG({ ...S.profile.avatar, [it.cat]: it.value }, { expr: 'happy', blink: false });
+  return `<div class="cos-art rar-${it.rarity} ${cls}">${art}</div>`;
+}
+function weeklySection() {
+  const items = G.weeklyShop();
+  return `<div class="weekly-shop">${items.map(it => {
+    const k = cosmeticKey(it), own = !!S.owned[k];
+    return `<button class="cos-card rar-${it.rarity} ${own ? 'own' : ''}" data-cos="${k}">
+      <em class="rar-tag">${t('rarity_' + it.rarity)}</em>${cosPreview(it)}
+      <b>${t('cos_' + it.id)}</b><small>${t('cat_' + it.cat)}</small>
+      ${own ? `<span class="cos-own">${ic('check')} ${t('owned')}</span>` : `<span class="cos-price">${ic('gem')} ${fmtInt(it.price)}</span>`}</button>`;
+  }).join('')}</div>`;
+}
+function gemShopToast(id) {
+  if (id === 'pass') return ic('pen') + ' ' + t('gs_pass_done', { n: S.autograph.passes });
+  if (id === 'x3') return ic('rocket') + ' ' + t('gs_x3_done', { t: fmtTime(G.x3Left()) });
+  return ic('star') + ' ' + t('gs_viral_done');
+}
+function accelSection() {
+  const row = (id, icon, title, sub, gems) => {
+    const st = G.gemShopState(id);
+    return `<div class="gs-row ${st}"><div class="gs-ic">${icon}</div><div class="gs-info"><b>${title}</b><small>${sub}</small></div>
+      <button class="btn sm ${st === 'ok' ? 'primary' : 'ghost'}" data-gs="${id}" ${st === 'limit' ? 'disabled' : ''}>${st === 'limit' ? ic('check') : `${ic('gem')} ${gems}`}</button></div>`;
+  };
+  const g = (id) => GEM_SHOP.find(x => x.id === id);
+  const passLeft = g('pass').perDay - (S.autograph.bought || 0);
+  const x3 = G.x3Left();
+  const warps = TIME_WARPS.map((w, i) => `<button class="warp-chip" data-warp="${i}"><b>${w.h}h</b><small>${ic('gold')} ${fmt(E.gpsNoBoost(S) * w.h * 3600)}</small><span>${ic('gem')} ${w.gems}</span></button>`).join('');
+  return `<div class="gs-list">
+    ${row('x3', `<span class="x3">x3</span>`, t('gs_x3'), x3 > 0 ? t('boostActive', { t: fmtTime(x3) }) : t('gs_x3_d'), g('x3').gems)}
+    ${row('viral', ic('star', 'xl'), t('gs_viral'), t('gs_viral_d', { m: g('viral').mult, n: g('viral').min }), g('viral').gems)}
+    ${row('pass', ic('pen', 'xl'), t('gs_pass'), t('gs_pass_d', { n: Math.max(0, passLeft) }), g('pass').gems)}
+    <div class="warp-box"><small>${t('timeWarp')}</small><div class="warps">${warps}</div></div></div>`;
+}
+
+// ---------------- season pass ----------------
+function seasonCard() {
+  const se = G.resetSeason();
+  const lv = G.seasonLevel();
+  const cl = G.seasonClaimable();
+  const xpIn = se.xp - lv * SEASON.xpPerTier;
+  return `<button class="season-card ${se.premium ? 'prem' : ''}" data-season="1">
+    <div class="sc-badge"><small>${t('tier')}</small><b>${lv}</b></div>
+    <div class="sc-info"><b>${t('seasonPass')} ${se.id + 1}</b><div class="bar"><i style="width:${lv >= SEASON.tiers ? 100 : xpIn / SEASON.xpPerTier * 100}%"></i></div>
+      <small>${ic('clock')} ${t('seasonEnds', { t: fmtTime(G.seasonEndsIn() / 1000) })}</small></div>
+    ${cl ? `<em class="badge">${cl}</em>` : ''}<span class="sc-go">›</span></button>`;
+}
+function rewardChip(r) {
+  if (r.item) { const it = premiumCatalog().find(x => cosmeticKey(x) === r.item); return `<div class="rw item">${it ? cosPreview(it, 'mini') : ''}<small>${it ? t('cos_' + it.id) : ''}</small></div>`; }
+  if (r.gems) return `<div class="rw">${ic('gem')}<b>${r.gems}</b></div>`;
+  if (r.goldMin) return `<div class="rw">${ic('gold')}<b>${r.goldMin}m</b></div>`;
+  if (r.boostMin) return `<div class="rw">${ic('rocket')}<b>x2 ${r.boostMin}m</b></div>`;
+  if (r.pass) return `<div class="rw">${ic('pen')}<b>+${r.pass}</b></div>`;
+  return '';
+}
+export function seasonModal(onPurchase) {
+  const draw = (api) => {
+    const se = G.resetSeason(), lv = G.seasonLevel();
+    const xpIn = se.xp - lv * SEASON.xpPerTier;
+    const P = PRODUCTS.find(p => p.id === 'season_pass');
+    const rows = Array.from({ length: SEASON.tiers }, (_, k) => {
+      const i = k + 1, got = i <= lv;
+      const cell = (track) => {
+        const r = seasonTier(i, track, se.id);
+        const claimed = (track === 'prem' ? se.prem : se.free).includes(i);
+        const locked = track === 'prem' && !se.premium;
+        const can = got && !claimed && !locked;
+        return `<div class="sp-cell ${track} ${claimed ? 'got' : ''} ${can ? 'ready' : ''} ${locked ? 'locked' : ''}" ${can ? `data-sclaim="${i}" data-track="${track}"` : ''}>${rewardChip(r)}${claimed ? `<span class="tick">${ic('check')}</span>` : locked ? `<span class="tick">${ic('lock')}</span>` : ''}</div>`;
+      };
+      return `<div class="sp-row ${got ? 'on' : ''} ${i === lv + 1 ? 'next' : ''}">${cell('free')}<div class="sp-lv"><b>${i}</b></div>${cell('prem')}</div>`;
+    }).join('');
+    api.body.innerHTML = `
+      <div class="sp-head"><div class="sp-lvl"><small>${t('tier')}</small><b>${lv}</b><span>/ ${SEASON.tiers}</span></div>
+        <div class="sp-xp"><div class="bar"><i style="width:${lv >= SEASON.tiers ? 100 : xpIn / SEASON.xpPerTier * 100}%"></i><span>${lv >= SEASON.tiers ? t('maxed') : `${xpIn} / ${SEASON.xpPerTier} XP`}</span></div>
+        <small>${ic('clock')} ${t('seasonEnds', { t: fmtTime(G.seasonEndsIn() / 1000) })}</small></div></div>
+      <p class="small muted center">${t('seasonHow')}</p>
+      ${se.premium ? '' : `<div class="sp-buy"><div><b>${t('seasonPremium')}</b><small>${t('seasonPremiumD')}</small></div><button class="btn gold-btn" data-buy="season_pass">${priceOf(P)}</button></div>`}
+      ${G.seasonClaimable() ? `<button class="btn primary wide" data-sall="1">${t('claimAll')} (${G.seasonClaimable()})</button>` : ''}
+      <div class="sp-cols"><span>${t('free')}</span><span></span><span class="prem">${ic('star')} ${t('premium')}</span></div>
+      <div class="sp-track">${rows}</div>`;
+  };
+  const api = modal({ title: t('seasonPass'), icon: ic('star'), cls: 'season', body: '' });
+  draw(api);
+  const claimFx = (el, r) => {
+    if (r.gems) gemsBurst(el, r.gems);
+    if (r.gold) goldBurst(el);
+    if (r.item) { confetti(80); toast(ic('shirt') + ' ' + t('cosBought')); }
+  };
+  api.body.addEventListener('click', (e) => {
+    const c = e.target.closest('[data-sclaim]');
+    if (c) { const r = G.claimSeason(+c.dataset.sclaim, c.dataset.track); if (r) { sfx.coin(); claimFx(c, r); draw(api); } return; }
+    if (e.target.closest('[data-sall]')) {
+      const se = G.resetSeason(), lv = G.seasonLevel(); let n = 0;
+      for (let i = 1; i <= lv; i++) for (const tr of ['free', 'prem']) { const r = G.claimSeason(i, tr); if (r) { n++; if (r.item) claimFx(api.el, r); } }
+      if (n) { sfx.levelUp(); gemsBurst(e.target, 30); draw(api); }
+      return;
+    }
+    const b = e.target.closest('[data-buy]');
+    if (b) { const p = PRODUCTS.find(x => x.id === b.dataset.buy); onPurchase && onPurchase(p, () => draw(api)); }
+  });
+  // scroll to current tier
+  requestAnimationFrame(() => { const nx = api.el.querySelector('.sp-row.next') || api.el.querySelector('.sp-row:last-child'); if (nx) nx.scrollIntoView({ block: 'center' }); });
+  return api;
 }

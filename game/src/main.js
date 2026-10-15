@@ -18,7 +18,7 @@ import { playIntro, coachAt, clearCoach } from './ui/intro.js';
 import { ads } from './ui/ads.js';
 import { avatarFrontSVG } from './art/avatar.js';
 import { equipIconSVG } from './art/room.js';
-import { PRODUCTS } from './data.js';
+import { PRODUCTS, ECO } from './data.js';
 
 const PRIVACY_URL = 'https://fefaofefao.github.io/quero-ser-streamer/privacy.html';
 const SUPPORT_MAIL = 'mailto:fe.m.sampaio@hotmail.com?subject=Quero%20ser%20Streamer';
@@ -80,7 +80,9 @@ function updateHud(now) {
   $('.hype-bar i', hb).style.width = (G.hypeActive() ? Math.max(0, (S.hypeUntil - Date.now()) / 12000) : S.hype) * 100 + '%';
   $('.hype-label', hb).textContent = G.hypeActive() ? t('hypeFull', { n: 2 }) : t('hypeTap');
   const bl = G.boostLeft();
-  $('#boost-tag').innerHTML = bl > 0 ? `${ic('rocket')} x2 ${fmtTime(bl)}` : (S.boosts.clipUntil > Date.now() ? `${ic('star')} x7 ${Math.ceil((S.boosts.clipUntil - Date.now()) / 1000)}s` : '');
+  const x3 = G.x3Left();
+  const clip = S.boosts.clipUntil > Date.now() ? (S.boosts.clipUntil - Date.now()) / 1000 : 0;
+  $('#boost-tag').innerHTML = [x3 > 0 ? `${ic('rocket')} x3 ${fmtTime(x3)}` : '', bl > 0 ? `${ic('rocket')} x2 ${fmtTime(bl)}` : '', clip > 0 ? `${ic('star')} x${S.boosts.clipMult || 7} ${clip < 60 ? Math.ceil(clip) + 's' : fmtTime(clip)}` : ''].filter(Boolean).slice(0, 2).join(' ');
   $('#qb-boost').textContent = bl > 0 ? fmtTime(bl).split(' ')[0] : '';
   // badges
   G.resetAutographDay();
@@ -88,7 +90,7 @@ function updateHud(now) {
   const ready = S.daily.missions.filter(m => !m.claimed && m.progress >= m.target).length + (G.chestReady() ? 1 : 0);
   $('#qb-mis').textContent = ready || '';
   $('#qb-log').textContent = S.login.claimedToday ? '' : '!';
-  $('#qb-shop').textContent = G.monthlyClaimReady() || G.freeGemsLeft() > 0 ? '!' : '';
+  $('#qb-shop').textContent = G.monthlyClaimReady() || G.freeGemsLeft() > 0 || G.seasonClaimable() > 0 ? '!' : '';
   // tab badges: affordable things
   const anyUp = E.UPGRADES.some((u, i) => G.upgradeUnlocked(i) && S.gold >= E.upgradeCost(S, i, S.upgrades[i]));
   $('#tb-channel').textContent = anyUp ? '•' : '';
@@ -168,6 +170,9 @@ function wireEvents() {
   G.on('top1', () => { setTimeout(() => M.letterModal('top'), 1200); S.owned['hat:crown'] = true; });
   G.on('verified', () => { renderHudStatic(); toast(ic('check') + ' ' + t('verified') + '!'); });
   G.on('missionReady', () => { bump($('[data-q="missions"]')); sfx.notify(); });
+  G.on('seasonTier', (lv) => { toast(ic('star') + ' ' + t('seasonTierUp', { n: lv })); bump($('[data-q="shop"]')); bridge.log('season_tier', { tier: lv }); });
+  G.on('cosmetic', (it) => { refreshScene(true); renderHudStatic(); bridge.log('cosmetic_get', { item: it.key || (it.cat + ':' + it.value) }); });
+  G.on('gemshop', ({ id }) => { bridge.log('gem_shop', { id }); });
   G.on('step', ({ i }) => { toast(ic('up_' + E.UPGRADES[i].id) + ' ' + t('up_' + E.UPGRADES[i].id) + ' x2!'); });
   ui.onBuy = (k) => {
     if (k === 'u0' && S.tutorial === 1) tutAdvance(2);
@@ -183,6 +188,7 @@ function wireEvents() {
 // ---------------- purchases ----------------
 async function purchase(p, after) {
   if (p === 'restore') { await restore(true); return; }
+  if (p === 'cosmetic') { refreshScene(true); renderHudStatic(); persist(S); return; }
   const r = await bridge.buy(p.id);
   if (r && r.ok) {
     applyPurchase(p.id, r.token);
@@ -195,8 +201,9 @@ function applyPurchase(id, token) {
   if (token) { S.iap.tokens.push(token); if (S.iap.tokens.length > 60) S.iap.tokens.shift(); }
   const p = PRODUCTS.find(x => x.id === id);
   if (!p) return;
-  G.grantProduct(p);
+  const gems = G.grantProduct(p);
   sfx.fanfare(); confetti(100);
+  if (gems) setTimeout(() => toast(ic('gem') + ' +' + fmt(gems)), 400);
   toast(ic('check') + ' ' + t('purchased'));
   bridge.log('purchase', { id });
   refreshScene(true); renderPanel();
@@ -398,9 +405,16 @@ function wireNative() {
 }
 
 // Live balancing from Firebase Remote Config key "game_config", e.g. {"gold":1.2,"fame":1}
+// Diamond economy under "eco", e.g. {"eco":{"missionGems":5,"chestGems":10,"weeklyGems":[20,40,80],"achMult":0.5,"adGems":5,"piggyMax":900,"piggyRate":0.25,"firstBuyMult":2}}
 function applyRemoteConfig() {
   const rc = bridge.remoteConfig() || {};
   for (const k of ['gold', 'fame', 'offline', 'event']) if (typeof rc[k] === 'number' && rc[k] > 0 && rc[k] < 100) E.TUNE[k] = rc[k];
+  const eco = rc.eco && typeof rc.eco === 'object' ? rc.eco : {};
+  for (const k of Object.keys(ECO)) {
+    const v = eco[k];
+    if (Array.isArray(ECO[k])) { if (Array.isArray(v) && v.length === ECO[k].length && v.every(n => typeof n === 'number' && n >= 0 && n < 10000)) ECO[k] = v; }
+    else if (typeof v === 'number' && v >= 0 && v < 100000) ECO[k] = v;
+  }
 }
 
 // ---------------- boot ----------------

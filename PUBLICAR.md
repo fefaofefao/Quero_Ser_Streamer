@@ -57,6 +57,7 @@ Produtos no app (todos ativos):
 | `gems_large` | 1.400 Diamantes | R$ 39,90 |
 | `gems_huge` | 3.000 Diamantes | R$ 79,90 |
 | `gems_mega` | 8.000 Diamantes | R$ 179,90 |
+| `season_pass` | Passe de Temporada (Premium) | R$ 19,90 |
 
 Assinatura: ID `monthly_pass` · nome "Passe Mensal" · plano base ID `mensal`, renovação automática **mensal**, R$ 14,90.
 
@@ -95,4 +96,4 @@ service cloud.firestore {
 }
 ```
 6. Crashlytics: abrir a página uma vez (ativa sozinho no 1º crash/relato).
-7. Remote Config (opcional): parâmetro `game_config` tipo JSON valor `{"gold":1,"fame":1,"offline":1,"event":1}`.
+7. Remote Config (opcional): parâmetro `game_config` tipo JSON valor `{"gold":1,"fame":1,"offline":1,"event":1,"eco":{"missionGems":5,"chestGems":10,"weeklyGems":[20,40,80],"achMult":0.5,"adGems":5,"adGemsPerDay":5,"piggyMax":900,"piggyRate":0.25,"firstBuyMult":2}}`. O bloco `eco` ajusta os diamantes sem gerar AAB novo.
