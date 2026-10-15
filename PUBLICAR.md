@@ -57,7 +57,7 @@ Produtos no app (todos ativos):
 | `gems_large` | 1.400 Diamantes | R$ 39,90 |
 | `gems_huge` | 3.000 Diamantes | R$ 79,90 |
 | `gems_mega` | 8.000 Diamantes | R$ 179,90 |
-| `season_pass` | Passe de Temporada (Premium) | R$ 19,90 |
+| `passe_temporada` | Passe de Temporada (Premium) | R$ 19,90 |
 
 Assinatura: ID `monthly_pass` · nome "Passe Mensal" · plano base ID `mensal`, renovação automática **mensal**, R$ 14,90.
 

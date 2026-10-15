@@ -499,7 +499,7 @@ export function seasonModal(onPurchase) {
   const draw = (api) => {
     const se = G.resetSeason(), lv = G.seasonLevel();
     const xpIn = se.xp - lv * SEASON.xpPerTier;
-    const P = PRODUCTS.find(p => p.id === 'season_pass');
+    const P = PRODUCTS.find(p => p.id === 'passe_temporada');
     const rows = Array.from({ length: SEASON.tiers }, (_, k) => {
       const i = k + 1, got = i <= lv;
       const cell = (track) => {
@@ -516,7 +516,7 @@ export function seasonModal(onPurchase) {
         <div class="sp-xp"><div class="bar"><i style="width:${lv >= SEASON.tiers ? 100 : xpIn / SEASON.xpPerTier * 100}%"></i><span>${lv >= SEASON.tiers ? t('maxed') : `${xpIn} / ${SEASON.xpPerTier} XP`}</span></div>
         <small>${ic('clock')} ${t('seasonEnds', { t: fmtTime(G.seasonEndsIn() / 1000) })}</small></div></div>
       <p class="small muted center">${t('seasonHow')}</p>
-      ${se.premium ? '' : `<div class="sp-buy"><div><b>${t('seasonPremium')}</b><small>${t('seasonPremiumD')}</small></div><button class="btn gold-btn" data-buy="season_pass">${priceOf(P)}</button></div>`}
+      ${se.premium ? '' : `<div class="sp-buy"><div><b>${t('seasonPremium')}</b><small>${t('seasonPremiumD')}</small></div><button class="btn gold-btn" data-buy="passe_temporada">${priceOf(P)}</button></div>`}
       ${G.seasonClaimable() ? `<button class="btn primary wide" data-sall="1">${t('claimAll')} (${G.seasonClaimable()})</button>` : ''}
       <div class="sp-cols"><span>${t('free')}</span><span></span><span class="prem">${ic('star')} ${t('premium')}</span></div>
       <div class="sp-track">${rows}</div>`;

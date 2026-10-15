@@ -34,7 +34,7 @@ import java.util.Set;
 public class Billing implements PurchasesUpdatedListener {
     private static final Set<String> SUBS = new HashSet<>(Collections.singletonList("monthly_pass"));
     private static final Set<String> CONSUMABLE = new HashSet<>(Arrays.asList(
-            "gems_small", "gems_medium", "gems_large", "gems_huge", "gems_mega", "piggy_bank", "season_pass"));
+            "gems_small", "gems_medium", "gems_large", "gems_huge", "gems_mega", "piggy_bank", "passe_temporada"));
 
     private final Activity activity;
     private final GameBridge bridge;

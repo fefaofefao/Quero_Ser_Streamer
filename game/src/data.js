@@ -165,7 +165,7 @@ export const PRODUCTS = [
   { id: 'gems_large', kind: 'inapp', consumable: true, gems: 1400, price: 'R$ 39,90' },
   { id: 'gems_huge', kind: 'inapp', consumable: true, gems: 3000, price: 'R$ 79,90' },
   { id: 'gems_mega', kind: 'inapp', consumable: true, gems: 8000, price: 'R$ 179,90', tag: 'best' },
-  { id: 'season_pass', kind: 'inapp', consumable: true, special: 'season', price: 'R$ 19,90' },
+  { id: 'passe_temporada', kind: 'inapp', consumable: true, special: 'season', price: 'R$ 19,90' },
 ];
 export const PIGGY_MIN_BREAK = 300;
 export const AD_BOOST_MIN = 30;
