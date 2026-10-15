@@ -58,9 +58,14 @@ jobs:
           clean() { printf '%s' "$1" | tr -d ' \t\r\n"'"'"; }
           app=$(clean "$ADMOB_APP_ID"); rew=$(clean "$ADMOB_REWARDED_ID"); int=$(clean "$ADMOB_INTERSTITIAL_ID")
           if [ -z "$app$rew$int" ]; then echo "::warning::AdMob secrets not set: using Google test ids"; exit 0; fi
-          [[ "$app" =~ ^ca-app-pub-[0-9]{16}~[0-9]{10}$ ]] || { echo "::error::ADMOB_APP_ID must look like ca-app-pub-0000000000000000~0000000000 (with ~)"; exit 1; }
-          [[ "$rew" =~ ^ca-app-pub-[0-9]{16}/[0-9]{10}$ ]] || { echo "::error::ADMOB_REWARDED_ID must look like ca-app-pub-0000000000000000/0000000000 (with /)"; exit 1; }
-          [[ "$int" =~ ^ca-app-pub-[0-9]{16}/[0-9]{10}$ ]] || { echo "::error::ADMOB_INTERSTITIAL_ID must look like ca-app-pub-0000000000000000/0000000000 (with /)"; exit 1; }
+          # Shape report without revealing the ids: length, prefix, separator.
+          shape() { v="$2"; echo "$1: length=${#v} prefix_ok=$([[ $v == ca-app-pub-* ]] && echo yes || echo no) has_tilde=$([[ $v == *~* ]] && echo yes || echo no) has_slash=$([[ $v == */* ]] && echo yes || echo no)"; }
+          shape ADMOB_APP_ID "$app"; shape ADMOB_REWARDED_ID "$rew"; shape ADMOB_INTERSTITIAL_ID "$int"
+          bad=0
+          [[ "$app" =~ ^ca-app-pub-[0-9]{16}~[0-9]{8,12}$ ]] || { echo "::error::ADMOB_APP_ID must be the APP id: ca-app-pub-0000000000000000~0000000000 (with ~)"; bad=1; }
+          [[ "$rew" =~ ^ca-app-pub-[0-9]{16}/[0-9]{8,12}$ ]] || { echo "::error::ADMOB_REWARDED_ID must be an AD UNIT id: ca-app-pub-0000000000000000/0000000000 (with /)"; bad=1; }
+          [[ "$int" =~ ^ca-app-pub-[0-9]{16}/[0-9]{8,12}$ ]] || { echo "::error::ADMOB_INTERSTITIAL_ID must be an AD UNIT id: ca-app-pub-0000000000000000/0000000000 (with /)"; bad=1; }
+          [ $bad = 0 ] || exit 1
           [ "$rew" != "$int" ] || { echo "::error::Rewarded and interstitial ids are the same ad unit"; exit 1; }
           pub() { echo "$1" | sed -E 's/^ca-app-pub-([0-9]{16}).*/pub-\1/'; }
           p=$(pub "$app")
