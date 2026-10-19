@@ -6,7 +6,7 @@ const texts = [];
 export function initFx(canvas) {
   cv = canvas; ctx = cv.getContext('2d');
   const resize = () => {
-    dpr = Math.min(3, window.devicePixelRatio || 1);
+    dpr = Math.min(2, window.devicePixelRatio || 1);
     W = window.innerWidth; H = window.innerHeight;
     cv.width = W * dpr; cv.height = H * dpr;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -67,8 +67,12 @@ export function floatText(x, y, text, color = '#ffd23f', size = 20) {
 let onArrive = null;
 export function setArriveHandler(fn) { onArrive = fn; }
 
+let drewLast = false;
 export function stepFx(dt) {
   if (!ctx) return;
+  // Idle: nothing flying and the canvas is already clear -> skip the full-screen redraw.
+  if (!parts.length && !texts.length) { if (drewLast) { ctx.clearRect(0, 0, W, H); drewLast = false; } return; }
+  drewLast = true;
   ctx.clearRect(0, 0, W, H);
   for (let i = parts.length - 1; i >= 0; i--) {
     const p = parts[i];

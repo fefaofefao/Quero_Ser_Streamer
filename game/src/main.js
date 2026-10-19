@@ -9,7 +9,7 @@ import { sfx, unlockAudio, setAudio, suspendAudio } from './audio.js';
 import { $, $$, modal, toast, confirmBox, closeTopModal, modalOpen, esc, bump } from './ui/dom.js';
 import { ic, marketBadge } from './ui/icons.js';
 import { initFx, stepFx, confetti, sparkles, coinBurst, setArriveHandler } from './ui/fx.js';
-import { initScene, stepScene, refreshScene, onHype, setExpr, pushChat } from './ui/scene.js';
+import { initScene, stepScene, refreshScene, onHype, setExpr, pushChat, setScenePaused } from './ui/scene.js';
 import { initPanels, showTab, refresh as refreshPanel, render as renderPanel, ui, currentTab } from './ui/panels.js';
 import * as M from './ui/modals.js';
 import { avatarEditor } from './ui/avatarEditor.js';
@@ -325,16 +325,22 @@ function loop(now) {
   const dt = Math.min(1, (now - last) / 1000 || 0);
   last = now;
   G.tick(dt);
+  // a window or the autograph event covers the stage: freeze what nobody can see
+  const covered = modalOpen() || !!autoOv();
+  setScenePaused(covered);
   stepScene(dt, now);
   stepFx(dt);
   hudT += dt; panelT += dt; saveT += dt; cloudT += dt; sceneT += dt;
   if (hudT > 0.2) { hudT = 0; updateHud(now); }
-  if (panelT > 0.25) { panelT = 0; refreshPanel(); }
+  if (panelT > 0.25) { panelT = 0; if (!covered) refreshPanel(); }
   if (saveT > 10) { saveT = 0; persist(S); }
   if (sceneT > 60) { sceneT = 0; refreshScene(); G.resetDaily(); }
   if (cloudT > 300) { cloudT = 0; const st = bridge.cloudStatus(); if (st.signedIn) bridge.cloudSave(persist(S)); }
   requestAnimationFrame(loop);
 }
+
+let ovEl = null;
+function autoOv() { if (!ovEl || !ovEl.isConnected) ovEl = document.querySelector('.auto-ov'); return ovEl; }
 
 function setTabActive(name) { $$('#tabs [data-tab]').forEach(b => b.classList.toggle('on', b.dataset.tab === name)); }
 

@@ -20,6 +20,17 @@ let expr = 'neutral', exprUntil = 0;
 let nextChat = 0, nextEvent = 0, lagActive = false, lagTaps = 0;
 let tapCount = 0, lastTapAt = 0;
 let transition = 0;
+let gameAcc = 0, paused = false;
+const GAME_STEP = 1 / 30;
+
+// Freeze the stage while a window covers it: no SVG/CSS animation, no monitor redraw, no chat.
+export function setScenePaused(p) {
+  if (p === paused || !stage) return;
+  paused = p;
+  stage.classList.toggle('paused', p);
+  for (const svg of stage.querySelectorAll('svg')) { if (p) svg.pauseAnimations && svg.pauseAnimations(); else svg.unpauseAnimations && svg.unpauseAnimations(); }
+  if (!p) { const n = performance.now(); nextChat = Math.max(nextChat, n + 800); }
+}
 
 export function initScene(root) {
   stage = root;
@@ -57,6 +68,7 @@ export function refreshScene(force = false) {
     const r = roomSVG({ ...S, profile: { ...S.profile, pet: S.profile.pet } }, { phase, marketColor: marketColor() });
     belowSvg.innerHTML = r.below;
     aboveSvg.innerHTML = r.above;
+    if (paused) { belowSvg.pauseAnimations(); aboveSvg.pauseAnimations(); }
     placeScreen();
   }
   const id = E.MARKETS[S.market].id;
@@ -236,13 +248,16 @@ function endLag(fixed) {
 
 // ---------- per frame ----------
 export function stepScene(dt, now) {
-  // live game on the monitor
-  if (game && screen.width > 10) {
+  if (paused) return;
+  // live game on the monitor, redrawn at 30 fps
+  gameAcc += dt;
+  if (game && screen.width > 10 && gameAcc >= GAME_STEP) {
+    dt = Math.min(gameAcc, 0.1); gameAcc = 0;
     const w = screen.width, h = screen.height;
     const k = S.equip.monitor <= 2 ? w / GW : Math.max(w / GW, h / GH);
     if (S.equip.monitor <= 2) { sctx.fillStyle = '#0b0820'; sctx.fillRect(0, 0, w, h); }
     sctx.setTransform(k, 0, 0, k, (w - GW * k) / 2, (h - GH * k) / 2);
-    try { game(sctx, Math.min(dt, 0.05), G.hypeActive()); } catch (e) { /* keep running */ }
+    try { game(sctx, Math.min(dt, 0.07), G.hypeActive()); } catch (e) { /* keep running */ }
     sctx.setTransform(1, 0, 0, 1, 0, 0);
     if (transition > 0) {
       transition -= dt;
