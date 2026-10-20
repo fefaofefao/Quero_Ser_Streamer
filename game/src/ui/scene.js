@@ -58,6 +58,8 @@ export function initScene(root) {
   new ResizeObserver(() => placeScreen()).observe(inner);
 }
 
+let arms = [];
+
 function marketColor() { return E.MARKETS[S.market].color; }
 
 export function refreshScene(force = false) {
@@ -68,6 +70,7 @@ export function refreshScene(force = false) {
     const r = roomSVG({ ...S, profile: { ...S.profile, pet: S.profile.pet } }, { phase, marketColor: marketColor() });
     belowSvg.innerHTML = r.below;
     aboveSvg.innerHTML = r.above;
+    arms = [...aboveSvg.querySelectorAll('.arm-r')];
     if (paused) { belowSvg.pauseAnimations(); aboveSvg.pauseAnimations(); }
     placeScreen();
   }
@@ -146,7 +149,8 @@ function onTap(e) {
   if (S.settings.vibration && tapCount % 3 === 0) bridge.vibrate(8);
   floatText(e.clientX, e.clientY - 10, '+' + fmt(v), G.hypeActive() ? '#ff7ab6' : '#ffd23f', 18);
   if (tapCount % 4 === 0) coinBurst(e.clientX, e.clientY, 2, $('#gold-pill .ic'));
-  aboveSvg.classList.remove('typing'); void aboveSvg.offsetWidth; aboveSvg.classList.add('typing');
+  // typing nudge on the mouse arm only (no reflow, no restyle of the whole room)
+  for (const a of arms) a.animate && a.animate([{ transform: 'none' }, { transform: 'translate(2px, 1px)' }, { transform: 'none' }], { duration: 180, easing: 'ease' });
   if (Math.random() < 0.12) pushChat(chatLine());
   document.dispatchEvent(new CustomEvent('stage-tap', { detail: { x: e.clientX - r.left, y: e.clientY - r.top } }));
 }

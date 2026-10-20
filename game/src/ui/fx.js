@@ -4,6 +4,7 @@ const parts = [];
 const texts = [];
 
 export function initFx(canvas) {
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => textCache.clear());
   cv = canvas; ctx = cv.getContext('2d');
   const resize = () => {
     dpr = Math.min(2, window.devicePixelRatio || 1);
@@ -67,13 +68,40 @@ export function floatText(x, y, text, color = '#ffd23f', size = 20) {
 let onArrive = null;
 export function setArriveHandler(fn) { onArrive = fn; }
 
-let drewLast = false;
+// Floating numbers are drawn once into a small bitmap (outline + fill) and then just blitted.
+const textCache = new Map();
+function textSprite(text, color, size) {
+  const key = text + '|' + color + '|' + size;
+  let sp = textCache.get(key);
+  if (sp) return sp;
+  const scale = dpr * 1.15; // a bit above screen resolution so the pop-in scale stays crisp
+  const c = document.createElement('canvas');
+  const g = c.getContext('2d');
+  g.font = `700 ${size}px Fredoka, sans-serif`;
+  const w = Math.ceil(g.measureText(text).width + 12), h = Math.ceil(size * 1.6);
+  c.width = Math.ceil(w * scale); c.height = Math.ceil(h * scale);
+  g.scale(scale, scale);
+  g.font = `700 ${size}px Fredoka, sans-serif`;
+  g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.lineWidth = 5; g.strokeStyle = 'rgba(30,18,60,.85)'; g.lineJoin = 'round';
+  g.strokeText(text, w / 2, h / 2); g.fillStyle = color; g.fillText(text, w / 2, h / 2);
+  sp = { c, w, h };
+  textCache.set(key, sp);
+  if (textCache.size > 60) textCache.delete(textCache.keys().next().value);
+  return sp;
+}
+
+// Only the area painted last frame is cleared (not the whole screen).
+let dirty = null, box = null;
+const grow = (x, y, r) => {
+  if (!box) box = { x0: x - r, y0: y - r, x1: x + r, y1: y + r };
+  else { if (x - r < box.x0) box.x0 = x - r; if (y - r < box.y0) box.y0 = y - r; if (x + r > box.x1) box.x1 = x + r; if (y + r > box.y1) box.y1 = y + r; }
+};
 export function stepFx(dt) {
   if (!ctx) return;
-  // Idle: nothing flying and the canvas is already clear -> skip the full-screen redraw.
-  if (!parts.length && !texts.length) { if (drewLast) { ctx.clearRect(0, 0, W, H); drewLast = false; } return; }
-  drewLast = true;
-  ctx.clearRect(0, 0, W, H);
+  if (dirty) { ctx.clearRect(dirty.x0 - 2, dirty.y0 - 2, dirty.x1 - dirty.x0 + 4, dirty.y1 - dirty.y0 + 4); dirty = null; }
+  if (!parts.length && !texts.length) return;
+  box = null;
   for (let i = parts.length - 1; i >= 0; i--) {
     const p = parts[i];
     p.life += dt;
@@ -87,34 +115,37 @@ export function stepFx(dt) {
       }
       p.rot += dt * 10;
       p.kind === 'coin' ? drawCoin(p.x, p.y, p.r, p.rot) : drawGem(p.x, p.y, p.r, p.rot);
+      grow(p.x, p.y, p.r + 2);
     } else if (p.kind === 'conf') {
       p.x += p.vx * dt + Math.sin(p.life * 3 + p.rot) * 0.6; p.y += p.vy * dt; p.rot += p.vr * dt;
       ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot); ctx.scale(1, Math.cos(p.life * 6 + p.rot));
       ctx.fillStyle = p.c; ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); ctx.restore();
+      grow(p.x, p.y, Math.max(p.w, p.h));
       if (p.life > p.max || p.y > H + 20) parts.splice(i, 1);
     } else if (p.kind === 'spark') {
       p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= 0.92; p.vy *= 0.92; p.rot += dt * 4;
       ctx.globalAlpha = Math.max(0, 1 - p.life / p.max);
       drawStar(p.x, p.y, p.r * (1 - p.life / p.max * 0.5), p.rot, p.c);
       ctx.globalAlpha = 1;
+      grow(p.x, p.y, p.r + 2);
       if (p.life > p.max) parts.splice(i, 1);
     }
   }
-  ctx.textAlign = 'center';
   for (let i = texts.length - 1; i >= 0; i--) {
     const tx = texts[i];
     tx.life += dt;
     const k = tx.life / 1.1;
     if (k >= 1) { texts.splice(i, 1); continue; }
     const sc = k < 0.15 ? 0.6 + k / 0.15 * 0.5 : 1.1 - Math.min(0.1, (k - 0.15));
-    ctx.save(); ctx.translate(tx.x, tx.y - k * 60); ctx.scale(sc, sc);
+    const sp = textSprite(tx.text, tx.color, tx.size);
+    const cx = tx.x, cy = tx.y - k * 60 - tx.size * 0.35; // same baseline position as before
+    const w = sp.w * sc, h = sp.h * sc;
     ctx.globalAlpha = k > 0.7 ? (1 - k) / 0.3 : 1;
-    ctx.font = `700 ${tx.size}px Fredoka, sans-serif`;
-    ctx.lineWidth = 5; ctx.strokeStyle = 'rgba(30,18,60,.85)'; ctx.lineJoin = 'round';
-    ctx.strokeText(tx.text, 0, 0); ctx.fillStyle = tx.color; ctx.fillText(tx.text, 0, 0);
-    ctx.restore();
+    ctx.drawImage(sp.c, cx - w / 2, cy - h / 2, w, h);
+    grow(cx, cy, Math.max(w, h) / 2 + 2);
   }
   ctx.globalAlpha = 1;
+  dirty = box;
 }
 
 export function fxBusy() { return parts.length + texts.length; }
