@@ -27,7 +27,7 @@ android {
         targetSdk = 36
         // CI passes VERSION_CODE (GitHub run number + 10) so every upload is higher.
         versionCode = (System.getenv("VERSION_CODE")?.toIntOrNull()?.plus(10)) ?: 3
-        versionName = "1.1.0"
+        versionName = "1.1.1"
     }
 
     signingConfigs {
