@@ -1,7 +1,7 @@
 // The streamer's room, drawn as layered SVG (viewBox 0 0 400 340).
 // Every equipment level and every house has its own drawing.
 import { avatarBack, shade } from './avatar.js';
-import { t } from '../i18n.js';
+import { t, lang } from '../i18n.js';
 
 export const W = 400, H = 340;
 const O = '#2a1f3d';
@@ -144,7 +144,7 @@ function house0(phase) {
   ${planks(250, H, '#a8794c', '#7a5230')}
   <rect x="0" y="244" width="${W}" height="8" fill="#c9a77a" ${S1}/>
   ${bed(-6, 232)}
-  <g transform="translate(350 296)"><rect x="-22" y="-26" width="44" height="30" fill="#d4a373" ${S}/><path d="M-22 -26 L-14 -34 L30 -34 L22 -26 Z" fill="#e7bf8c" ${S1}/><path d="M22 -26 L30 -34 L30 -4 L22 4 Z" fill="#b5835a" ${S1}/><text x="0" y="-8" font-size="7" text-anchor="middle" font-family="Fredoka" fill="#7a5230">FRÁGIL</text></g>
+  <g transform="translate(350 296)"><rect x="-22" y="-26" width="44" height="30" fill="#d4a373" ${S}/><path d="M-22 -26 L-14 -34 L30 -34 L22 -26 Z" fill="#e7bf8c" ${S1}/><path d="M22 -26 L30 -34 L30 -4 L22 4 Z" fill="#b5835a" ${S1}/><text x="0" y="-8" font-size="7" text-anchor="middle" font-family="Fredoka" fill="#7a5230">${({ en: 'FRAGILE', es: 'FRÁGIL' })[lang] || 'FRÁGIL'}</text></g>
   `;
 }
 
