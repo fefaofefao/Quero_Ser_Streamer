@@ -81,8 +81,8 @@ export function refreshScene(force = false) {
 
 function placeScreen() {
   const sc = SCREENS[S.equip.monitor - 1];
-  const box = inner.getBoundingClientRect();
-  const k = box.width / 400;
+  // layout width (CSS px inside the scaled UI), not the on-screen rect
+  const k = inner.offsetWidth / 400;
   screen.style.left = sc.x * k + 'px';
   screen.style.top = sc.y * k + 'px';
   screen.style.width = sc.w * k + 'px';

@@ -25,6 +25,19 @@ const SUPPORT_MAIL = 'mailto:fe.m.sampaio@hotmail.com?subject=Quero%20ser%20Stre
 let S;
 
 // ---------------- layout ----------------
+// The UI is designed for ~400 CSS px wide phones. Narrower or shorter screens (e.g. a Galaxy S21,
+// or any phone with a larger "screen zoom") get the whole UI scaled down instead of overflowing.
+// Needs the standard CSS zoom (Chrome/WebView 128+); older WebViews keep the unscaled layout.
+const REF_W = 400, REF_H = 780;
+function applyScale() {
+  const m = /Chrome\/(\d+)/.exec(navigator.userAgent);
+  const ok = !m || +m[1] >= 128;
+  const z = ok ? Math.min(1, window.innerWidth / REF_W, window.innerHeight / REF_H) : 1;
+  document.documentElement.style.setProperty('--z', z.toFixed(4));
+}
+applyScale();
+window.addEventListener('resize', applyScale);
+
 function buildLayout() {
   document.body.innerHTML = `
   <div id="app">
