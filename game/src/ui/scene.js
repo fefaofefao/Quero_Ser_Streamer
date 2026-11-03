@@ -64,7 +64,7 @@ function marketColor() { return E.MARKETS[S.market].color; }
 
 export function refreshScene(force = false) {
   const phase = skyPhase();
-  const key = JSON.stringify([S.house, S.equip, S.extras, S.plaques, S.profile.avatar, S.profile.pet, S.profile.channel, S.profile.neonColor, phase, S.market]);
+  const key = JSON.stringify([S.house, S.equip, S.extras, S.plaques, S.profile.avatar, S.profile.pet, S.profile.theme, S.profile.channel, S.profile.neonColor, phase, S.market, lang]);
   if (force || key !== roomKey) {
     roomKey = key;
     const r = roomSVG({ ...S, profile: { ...S.profile, pet: S.profile.pet } }, { phase, marketColor: marketColor() });

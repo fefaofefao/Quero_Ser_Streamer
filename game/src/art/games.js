@@ -1,3 +1,13 @@
+import { lang } from '../i18n.js';
+
+// On-screen texts of the monitor minigames, per language.
+const GT = {
+  pt: { lines: 'LINHAS', b1: 'BLOCO', b2: 'CAI', world: 'MUNDO', goal: 'GOOOL!', alive: 'vivos', kills: 'abates', you: 'VOCÊ', KILLS: 'ABATES' },
+  en: { lines: 'LINES', b1: 'BLOCK', b2: 'DROP', world: 'WORLD', goal: 'GOAL!', alive: 'alive', kills: 'kills', you: 'YOU', KILLS: 'KILLS' },
+  es: { lines: 'LÍNEAS', b1: 'BLOQUE', b2: 'CAE', world: 'MUNDO', goal: '¡GOOOL!', alive: 'vivos', kills: 'bajas', you: 'TÚ', KILLS: 'BAJAS' },
+};
+const gt = (k) => (GT[lang] || GT.pt)[k];
+
 // Animated "gameplay" shown on the streamer's monitor. One renderer per market.
 // Each renderer draws into a canvas context in a fixed 320x180 logical space.
 
@@ -70,8 +80,8 @@ function blococai() {
     for (const [x, y] of piece.cells) if (piece.y + y >= 0) cell(piece.x + x, piece.y + y, piece.c);
     ctx.fillStyle = '#fff'; ctx.font = '700 11px Fredoka'; ctx.fillText('SCORE', 230, 30);
     ctx.fillStyle = '#ffd23f'; ctx.font = '700 15px Fredoka'; ctx.fillText(String(score).padStart(6, '0'), 230, 48);
-    ctx.fillStyle = '#fff'; ctx.font = '700 11px Fredoka'; ctx.fillText('LINHAS ' + lines, 230, 70);
-    ctx.fillStyle = '#a5b4fc'; ctx.font = '700 16px Fredoka'; ctx.fillText('BLOCO', 24, 40); ctx.fillStyle = '#f472b6'; ctx.fillText('CAI', 36, 58);
+    ctx.fillStyle = '#fff'; ctx.font = '700 11px Fredoka'; ctx.fillText(gt('lines') + ' ' + lines, 230, 70);
+    ctx.fillStyle = '#a5b4fc'; ctx.font = '700 16px Fredoka'; ctx.fillText(gt('b1'), 24, 40); ctx.fillStyle = '#f472b6'; ctx.fillText(gt('b2'), 36, 58);
   };
 }
 
@@ -131,7 +141,7 @@ function pulopixel() {
     ctx.fillStyle = '#118ab2'; ctx.fillRect(-6, -8, 5, 8 + leg); ctx.fillRect(1, -8, 5, 8 - leg);
     ctx.restore();
     ctx.fillStyle = '#fff'; ctx.font = '700 12px Fredoka'; ctx.fillText('🪙 x' + coins, 10, 18);
-    ctx.fillText('MUNDO 1-' + (1 + Math.floor(x / 2000) % 4), 230, 18);
+    ctx.fillText(gt('world') + ' 1-' + (1 + Math.floor(x / 2000) % 4), 230, 18);
   };
 }
 
@@ -175,7 +185,7 @@ function goltotal() {
       goalT -= dt;
       ctx.font = '700 34px Fredoka'; ctx.fillStyle = '#ffd23f'; ctx.strokeStyle = '#1b1b2f'; ctx.lineWidth = 5;
       const sc = 1 + Math.sin(goalT * 10) * 0.08;
-      ctx.save(); ctx.translate(160, 100); ctx.scale(sc, sc); ctx.strokeText('GOOOL!', 0, 0); ctx.fillText('GOOOL!', 0, 0); ctx.restore();
+      ctx.save(); ctx.translate(160, 100); ctx.scale(sc, sc); ctx.strokeText(gt('goal'), 0, 0); ctx.fillText(gt('goal'), 0, 0); ctx.restore();
     }
     ctx.textAlign = 'left';
   };
@@ -325,7 +335,7 @@ function zona() {
     }
     ctx.fillStyle = '#4cc9f0'; ctx.beginPath(); ctx.arc(me.x, me.y, 5, 0, 7); ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
     ctx.fillStyle = 'rgba(0,0,0,.55)'; rr(ctx, 230, 6, 84, 32, 6); ctx.fill();
-    ctx.fillStyle = '#fff'; ctx.font = '700 11px Fredoka'; ctx.fillText('👤 ' + alive + ' vivos', 238, 19); ctx.fillStyle = '#ffd60a'; ctx.fillText('💀 ' + kills + ' abates', 238, 33);
+    ctx.fillStyle = '#fff'; ctx.font = '700 11px Fredoka'; ctx.fillText('👤 ' + alive + ' ' + gt('alive'), 238, 19); ctx.fillStyle = '#ffd60a'; ctx.fillText('💀 ' + kills + ' ' + gt('kills'), 238, 33);
   };
 }
 
@@ -371,10 +381,10 @@ function alvo() {
     ctx.restore();
     if (flash > 0) { flash -= dt; ctx.fillStyle = 'rgba(255,214,10,.9)'; ctx.beginPath(); ctx.arc(196, 126, 12 + Math.random() * 6, 0, 7); ctx.fill(); ctx.fillStyle = 'rgba(255,255,255,.15)'; ctx.fillRect(0, 0, GW, GH); }
     ctx.font = '700 10px Fredoka';
-    feed.forEach((f, i) => { f.life -= dt / 3; ctx.fillStyle = `rgba(0,0,0,${0.5 * Math.max(0, f.life)})`; rr(ctx, 190, 8 + i * 15, 124, 13, 4); ctx.fill(); ctx.fillStyle = `rgba(255,255,255,${Math.max(0, f.life)})`; ctx.fillText('VOCÊ  ⌖  ' + f.n, 196, 18 + i * 15); });
+    feed.forEach((f, i) => { f.life -= dt / 3; ctx.fillStyle = `rgba(0,0,0,${0.5 * Math.max(0, f.life)})`; rr(ctx, 190, 8 + i * 15, 124, 13, 4); ctx.fill(); ctx.fillStyle = `rgba(255,255,255,${Math.max(0, f.life)})`; ctx.fillText(gt('you') + '  ⌖  ' + f.n, 196, 18 + i * 15); });
     ctx.fillStyle = 'rgba(0,0,0,.5)'; rr(ctx, 6, 150, 70, 24, 5); ctx.fill();
     ctx.fillStyle = '#fff'; ctx.font = '700 13px Fredoka'; ctx.fillText('❤ 100', 12, 166);
-    ctx.fillStyle = 'rgba(0,0,0,.5)'; rr(ctx, 130, 6, 60, 16, 5); ctx.fill(); ctx.fillStyle = '#ffd60a'; ctx.font = '700 10px Fredoka'; ctx.fillText(kills + ' ABATES', 138, 18);
+    ctx.fillStyle = 'rgba(0,0,0,.5)'; rr(ctx, 130, 6, 60, 16, 5); ctx.fill(); ctx.fillStyle = '#ffd60a'; ctx.font = '700 10px Fredoka'; ctx.fillText(kills + ' ' + gt('KILLS'), 138, 18);
   };
 }
 

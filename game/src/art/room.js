@@ -1,6 +1,7 @@
 // The streamer's room, drawn as layered SVG (viewBox 0 0 400 340).
 // Every equipment level and every house has its own drawing.
 import { avatarBack, shade } from './avatar.js';
+import { t } from '../i18n.js';
 
 export const W = 400, H = 340;
 const O = '#2a1f3d';
@@ -139,7 +140,7 @@ function house0(phase) {
   <path d="M60 210 l8 -12 l-3 -10 l7 -8" stroke="#b49a72" stroke-width="1.4" fill="none"/>
   ${windowFrame(32, 52, 74, 64, phase, '#f4efe6', '#e57373')}
   ${framedPhoto(130, 40)}
-  ${poster(318, 72, 52, 64, '#4c1d95', '#7c3aed', 'BLOCOCAI', 4)}
+  ${poster(318, 72, 52, 64, '#4c1d95', '#7c3aed', t('mk_blococai').toUpperCase(), 4)}
   ${planks(250, H, '#a8794c', '#7a5230')}
   <rect x="0" y="244" width="${W}" height="8" fill="#c9a77a" ${S1}/>
   ${bed(-6, 232)}
@@ -154,7 +155,7 @@ function house1(phase) {
   <rect y="0" width="${W}" height="10" fill="#b8c7d6"/>
   ${windowFrame(286, 46, 84, 70, phase, '#ffffff', null)}
   <g transform="translate(286 116)" opacity=".9">${phase === 'night' ? '<rect x="8" y="-30" width="12" height="30" fill="#334"/><rect x="26" y="-44" width="14" height="44" fill="#2a2a40"/><rect x="48" y="-24" width="16" height="24" fill="#334"/>' : '<rect x="8" y="-30" width="12" height="30" fill="#93a8c6"/><rect x="26" y="-44" width="14" height="44" fill="#7f95b8"/><rect x="48" y="-24" width="16" height="24" fill="#93a8c6"/>'}</g>
-  ${poster(126, 34, 46, 58, '#065f46', '#10b981', 'PULO PIXEL', -3)}
+  ${poster(126, 34, 46, 58, '#065f46', '#10b981', t('mk_pulopixel').toUpperCase(), -3)}
   <path d="M20 20 Q60 40 100 20 Q140 40 180 20" stroke="#555" stroke-width="1" fill="none"/>
   ${[30, 55, 80, 105, 130, 155].map((x, i) => `<circle cx="${x}" cy="${26 + (i % 2) * 4}" r="3.2" fill="${['#fde047', '#f472b6', '#60a5fa'][i % 3]}"><animate attributeName="opacity" values="1;.35;1" dur="${1.6 + i * 0.3}s" repeatCount="indefinite"/></circle>`).join('')}
   ${planks(250, H, '#c9b79c', '#a8957a', 40)}
@@ -174,7 +175,7 @@ function house2(phase) {
   ${windowFrame(118, 26, 58, 44, phase, '#1f2140', null)}
   <g opacity=".95">${[0, 1, 2, 3, 4].map(i => `<rect x="${121 + i * 11}" y="${48 - (i * 7) % 16}" width="8" height="${22 + (i * 7) % 16}" fill="${phase === 'night' ? '#1c1f3f' : '#5c6aa0'}"/>${phase === 'night' ? `<rect x="${123 + i * 11}" y="${52 - (i * 7) % 16}" width="2" height="2" fill="#ffe08a"/><rect x="${126 + i * 11}" y="${58 - (i * 7) % 16}" width="2" height="2" fill="#ffe08a"/>` : ''}`).join('')}</g>
   ${shelf(214, 46, 84, figurine(232, 46, '#f472b6') + figurine(250, 46, '#60a5fa') + trophy(272, 46, '#cbd5e1') + `<rect x="282" y="34" width="10" height="12" fill="#facc15" ${S1}/>`)}
-  ${poster(20, 112, 46, 58, '#7c2d12', '#ea580c', 'GOL TOTAL', -2)}
+  ${poster(20, 112, 46, 58, '#7c2d12', '#ea580c', t('mk_goltotal').toUpperCase(), -2)}
   ${planks(250, H, '#3f3a52', '#2c283d', 50)}
   <rect x="0" y="244" width="${W}" height="8" fill="#23253f" ${S1}/>
   ${plant(360, 300, 1.1)}
