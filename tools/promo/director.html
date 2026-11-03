@@ -1,0 +1,244 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Promo director</title>
+<style>
+  @font-face { font-family: Fredoka; font-weight: 700; src: url(../../web/fonts/fredoka-700.woff2) format('woff2'); }
+  @font-face { font-family: Fredoka; font-weight: 600; src: url(../../web/fonts/fredoka-600.woff2) format('woff2'); }
+  @font-face { font-family: Nunito; font-weight: 800; src: url(../../web/fonts/nunito-800.woff2) format('woff2'); }
+  html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #150f2b; }
+  body { position: relative; font-family: Fredoka, sans-serif; color: #fff; }
+  #bg { position: absolute; inset: 0; background: radial-gradient(120% 90% at 30% 20%, #5b2fc4 0%, #2a1660 45%, #120a2a 100%); }
+  #bg .orb { position: absolute; border-radius: 50%; filter: blur(30px); opacity: .55; }
+  #phone { position: absolute; overflow: hidden; background: #000; }
+  #game { position: absolute; left: 0; top: 0; border: 0; width: 405px; height: 720px; transform-origin: 0 0; }
+  #fx { position: absolute; inset: 0; pointer-events: none; }
+  .ripple { position: absolute; width: 44px; height: 44px; margin: -22px 0 0 -22px; border-radius: 50%; border: 4px solid rgba(255,255,255,.95); box-shadow: 0 0 12px rgba(255,255,255,.6); }
+  .finger { position: absolute; width: 54px; height: 64px; margin: -6px 0 0 -14px; filter: drop-shadow(0 6px 8px rgba(0,0,0,.45)); }
+  .cap { position: absolute; text-align: center; font-weight: 700; line-height: 1.02; letter-spacing: .5px; text-transform: uppercase;
+    -webkit-text-stroke: 0; paint-order: stroke fill; }
+  .cap span { display: inline-block; padding: 6px 14px 8px; border-radius: 18px; background: rgba(18, 8, 44, .82); box-shadow: 0 8px 24px rgba(0,0,0,.45), inset 0 0 0 3px rgba(255,255,255,.18); }
+  .cap em { font-style: normal; background: linear-gradient(180deg, #fff38a, #ffb82e); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .cap i { font-style: normal; background: linear-gradient(180deg, #ff9ccc, #ff4f8b); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  #end { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0;
+    background: radial-gradient(90% 70% at 50% 40%, #6a35e0 0%, #2a1660 55%, #0e0722 100%); }
+  #end .rays { position: absolute; left: 50%; top: 40%; width: 1600px; height: 1600px; margin: -800px 0 0 -800px; border-radius: 50%;
+    background: repeating-conic-gradient(rgba(255,255,255,.08) 0 9deg, transparent 9deg 18deg); }
+  #end img { position: relative; border-radius: 22%; box-shadow: 0 16px 40px rgba(0,0,0,.5), 0 0 0 6px rgba(255,255,255,.15); }
+  #end h1 { position: relative; margin: 0; font-weight: 700; text-align: center; line-height: .95; text-shadow: 0 6px 0 #2a1060, 0 10px 30px rgba(0,0,0,.5); }
+  #end h1 em { font-style: normal; display: block; background: linear-gradient(180deg, #fff38a, #ffb82e); -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: none; filter: drop-shadow(0 6px 0 #2a1060); }
+  #end .tag { position: relative; font-family: Nunito, sans-serif; font-weight: 800; opacity: .92; }
+  #end .btn { position: relative; font-weight: 700; color: #0f3d24; background: linear-gradient(180deg, #8dffc8, #22c27e); border-radius: 999px; box-shadow: 0 8px 0 #128a56, 0 14px 30px rgba(0,0,0,.45); }
+  #end .store { position: relative; font-family: Nunito, sans-serif; font-weight: 800; opacity: .8; letter-spacing: .5px; }
+
+  /* vertical 9:16 */
+  .m-v #phone { left: 0; top: 0; width: 405px; height: 720px; }
+  .m-v .cap { left: 0; right: 0; top: 462px; font-size: 34px; }
+  .m-v #end img { width: 128px; height: 128px; margin-bottom: 22px; }
+  .m-v #end h1 { font-size: 46px; }
+  .m-v #end .tag { font-size: 18px; margin: 14px 0 26px; }
+  .m-v #end .btn { font-size: 26px; padding: 16px 36px; }
+  .m-v #end .store { font-size: 13px; margin-top: 22px; }
+
+  /* horizontal 16:9 */
+  .m-h #phone { left: 130px; top: 30px; width: 270px; height: 480px; border-radius: 30px; box-shadow: 0 0 0 9px #0d0820, 0 0 0 11px #3d2a7a, 0 24px 60px rgba(0,0,0,.6); }
+  .m-h .cap { left: 440px; right: 30px; top: 205px; font-size: 52px; text-align: left; }
+  .m-h .cap span { padding: 10px 22px 12px; }
+  .m-h #end img { width: 120px; height: 120px; margin-bottom: 16px; }
+  .m-h #end h1 { font-size: 58px; }
+  .m-h #end .tag { font-size: 18px; margin: 10px 0 20px; }
+  .m-h #end .btn { font-size: 26px; padding: 14px 40px; }
+  .m-h #end .store { font-size: 13px; margin-top: 18px; }
+  .m-h .logo-corner { position: absolute; left: 440px; top: 40px; display: flex; align-items: center; gap: 12px; font-size: 26px; font-weight: 700; }
+  .m-h .logo-corner img { width: 54px; height: 54px; border-radius: 22%; box-shadow: 0 6px 16px rgba(0,0,0,.4); }
+  .m-h .logo-corner small { display: block; font-family: Nunito, sans-serif; font-size: 14px; opacity: .8; }
+  .m-v .logo-corner { display: none; }
+</style>
+</head>
+<body>
+  <div id="bg"></div>
+  <div class="logo-corner"><img src="../../store/icon-512.png" alt=""><div>Idle Streamer<small>Rise to Fame</small></div></div>
+  <div id="phone"><iframe id="game"></iframe><div id="fx"></div></div>
+  <div id="caps"></div>
+  <div id="end">
+    <div class="rays"></div>
+    <img src="../../store/icon-512.png" alt="">
+    <h1>Idle Streamer<em>Rise to Fame</em></h1>
+    <div class="tag">Tap. Stream. Get famous.</div>
+    <div class="btn">PLAY FREE NOW</div>
+    <div class="store">Free on Google Play</div>
+  </div>
+<script>
+const MODE = new URLSearchParams(location.search).get('mode') || 'v';
+document.body.classList.add('m-' + MODE);
+const FPS = 30;
+const frame = document.getElementById('game');
+const phone = document.getElementById('phone');
+const fxLayer = document.getElementById('fx');
+const capsEl = document.getElementById('caps');
+const endEl = document.getElementById('end');
+// game scale/offset inside the video: vertical crops in so the room fills the width
+const SCALE = MODE === 'h' ? 270 / 405 : 1;
+const OFFX = MODE === 'h' ? 0 : -(405 * SCALE - 405) / 2;
+frame.style.transform = `translateX(${OFFX}px) scale(${SCALE})`;
+
+// background orbs (horizontal)
+const orbs = [];
+for (let i = 0; i < 6; i++) {
+  const o = document.createElement('div'); o.className = 'orb';
+  const c = ['#ff4f8b', '#59d8ff', '#ffc83d', '#8b5cf6', '#3ddc97', '#ff9f1c'][i];
+  o.style.background = c; o.style.width = o.style.height = (120 + i * 30) + 'px';
+  document.getElementById('bg').appendChild(o); orbs.push(o);
+}
+
+// ---------- seed save + load game ----------
+const pad = (n) => String(n).padStart(2, '0');
+const d = new Date();
+const today = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+localStorage.setItem('qss_save_v1', JSON.stringify({
+  v: 1, created: Date.now(), lastSeen: Date.now(), introDone: true, tutorial: 9,
+  profile: { name: '', channel: 'NovaPlays', avatar: { skin: 1, body: 1, hair: 4, hairColor: 7, outfit: 3, outfitColor: 1, hat: 'headset', glasses: 'none', neck: 'none' }, pet: 'none', theme: 'none', neonColor: 1, verified: true },
+  settings: { music: false, sfx: false, vibration: false, notifications: false, lang: 'en', numbers: 'short' },
+  login: { last: today, cycle: 2, claimedToday: true, days: 3 },
+  gold: 3, diamonds: 120, plaques: 5, bestRank: 10000000,
+}));
+let gw, q;
+window.__ready = new Promise((res) => {
+  frame.addEventListener('load', () => {
+    gw = frame.contentWindow;
+    const wait = () => {
+      if (gw.__qss && gw.document.querySelector('#stage .stage-inner')) {
+        q = gw.__qss;
+        // promo framing: the live room uses the full width of the phone
+        const st = gw.document.createElement('style');
+        st.textContent = '.stage-inner{width:100%!important} #stage{padding:0 6px!important}';
+        gw.document.head.appendChild(st);
+        res(true);
+      } else setTimeout(wait, 50);
+    };
+    wait();
+  });
+  frame.src = '../../web/index.html';
+});
+
+// ---------- helpers ----------
+const rnd = (() => { let s = 7; return () => { s = (s * 16807) % 2147483647; return s / 2147483647; }; })();
+const S = () => q.S;
+const gdoc = () => gw.document;
+const step = (ms) => gw.__vt.advance(ms);
+function stageRect() { return gdoc().querySelector('#stage .stage-inner').getBoundingClientRect(); }
+const ripples = [];
+function showTap(x, y) { // x,y in game viewport coords
+  const el = document.createElement('div'); el.className = 'ripple';
+  el.style.left = OFFX + x * SCALE + 'px'; el.style.top = y * SCALE + 'px';
+  fxLayer.appendChild(el); ripples.push({ el, t: 0 });
+}
+function pointer(el, x, y) {
+  el.dispatchEvent(new gw.PointerEvent('pointerdown', { bubbles: true, clientX: x, clientY: y, pointerId: 1, isPrimary: true }));
+  el.dispatchEvent(new gw.PointerEvent('pointerup', { bubbles: true, clientX: x, clientY: y, pointerId: 1, isPrimary: true }));
+}
+function tapStage() {
+  const r = stageRect();
+  const x = r.left + r.width * (0.25 + rnd() * 0.5), y = r.top + r.height * (0.25 + rnd() * 0.45);
+  const el = gdoc().querySelector('#stage .stage-inner');
+  pointer(el, x, y); showTap(x, y);
+}
+function tapEl(sel) {
+  const el = gdoc().querySelector(sel); if (!el) return false;
+  const r = el.getBoundingClientRect(); const x = r.left + r.width / 2, y = r.top + r.height / 2;
+  pointer(el, x, y); showTap(x, y); return true;
+}
+function closeModals() { gdoc().querySelectorAll('.modal-wrap .m-x').forEach(x => x.click()); }
+function setEquip(lv) { const e = S().equip; for (const k in e) e[k] = Math.max(e[k], lv); }
+
+// ---------- timeline ----------
+const caps = [
+  [0.15, 1.9, 'My grandma\'s<br><em>old PC...</em>'],
+  [1.9, 3.6, '...made me a<br><i>streamer?!</i>'],
+  [3.6, 8.2, 'Tap to <em>HYPE</em><br>the chat!'],
+  [8.2, 12.8, 'Upgrade<br>your <em>setup!</em>'],
+  [12.8, 15.0, 'From grandma\'s<br><em>room...</em>'],
+  [15.0, 17.6, '...to a <em>star</em><br><i>mansion!</i>'],
+  [17.6, 22.8, 'Meet your<br><em>fans!</em>'],
+  [22.8, 26.6, 'Become <em>#1</em><br>in the world!'],
+];
+const cues = [];
+const at = (t, fn) => cues.push({ t, fn, done: false });
+const every = (t0, t1, dt, fn) => { for (let t = t0; t < t1; t += dt) at(t, fn); };
+
+// A + B: hook, tapping, hype
+at(0, () => { const s = S(); s.house = 0; s.market = 0; s.maxMarket = 0; s.equip = { pc: 1, monitor: 1, mouse: 1, mousepad: 1, chair: 1, webcam: 1 }; s.extras = { mic: 0, rgb: 0, green: 0, guest: 0, pool: 0 }; s.upgrades = s.upgrades.map(() => 0); s.upgrades[0] = 3; q.refreshScene(true); q.renderPanel(); });
+every(0.45, 8.1, 0.13, tapStage);
+at(3.6, () => { const s = S(); s.upgrades = s.upgrades.map((_, i) => i < 4 ? 40 - i * 8 : 0); s.market = 1; s.maxMarket = 1; q.refreshScene(true); q.renderPanel(); });
+at(4.9, () => { S().hype = 0.985; });
+at(6.0, () => q.forceEvent('clip'));
+at(6.8, () => tapEl('.ev-item'));
+// C: upgrades with celebration
+at(8.3, () => { S().equip.pc = 3; S().equip.monitor = 3; q.G.emit('equip', { id: 'monitor', lv: 3 }); });
+at(9.4, () => closeModals());
+at(9.9, () => { setEquip(4); S().extras.mic = 2; q.refreshScene(true); const r = stageRect(); q.fx.sparkles(r.left + r.width / 2, r.top + r.height / 2, 30, '#ffd23f'); q.fx.confetti(50); });
+at(11.1, () => { setEquip(5); S().extras.rgb = 2; q.refreshScene(true); const r = stageRect(); q.fx.sparkles(r.left + r.width / 2, r.top + r.height / 2, 30, '#59d8ff'); q.fx.confetti(60); });
+every(11.2, 17.0, 0.18, tapStage);
+// D: houses
+const move = (h, extra) => () => { const s = S(); s.house = h; Object.assign(s.extras, extra || {}); s.market = Math.min(7, 2 + h); s.maxMarket = s.market; q.refreshScene(true); q.renderPanel(); const r = stageRect(); q.fx.confetti(70); q.fx.sparkles(r.left + r.width / 2, r.top + r.height * 0.4, 26, '#ffd23f'); };
+at(13.1, move(1, { rgb: 2 }));
+at(14.0, move(2, { rgb: 3, green: 2 }));
+at(14.9, move(3, { guest: 2 }));
+at(15.8, () => { move(4, { pool: 3, guest: 3, rgb: 3, mic: 3 })(); const p = S().profile; p.theme = 'galaxy'; p.pet = 'dragon'; p.avatar = { ...p.avatar, outfit: 11, hat: 'goldset', hairColor: 8 }; q.refreshScene(true); });
+// E: autographs
+at(16.7, () => { S().market = 6; q.startAutograph(() => {}); });
+every(18.95, 22.7, 0.11, () => tapEl('.auto-ov .sign-card'));
+at(22.8, () => { gdoc().querySelectorAll('.auto-ov').forEach(o => o.remove()); });
+// F: ranking to #1
+at(22.8, () => { const s = S(); s.house = 4; s.market = 7; s.maxMarket = 7; s.fameAll = 1e16; s.bestRank = 1; q.showTab('career'); q.setTabActive('career'); });
+const F0 = 23.1, F1 = 25.6;
+for (let t = F0; t <= F1 + 0.01; t += 1 / FPS) at(t, () => { const k = Math.min(1, (cur - F0) / (F1 - F0)); const e = 1 - Math.pow(1 - k, 2); S().fameAll = Math.pow(10, 16 + e * 9.4); });
+at(25.75, () => { q.fx.confetti(160); const r = gdoc().querySelector('#rank-line'); if (r) { const b = r.getBoundingClientRect(); q.fx.sparkles(b.left + 60, b.top + 8, 30, '#ffd23f'); } });
+
+// ---------- frame ----------
+let cur = 0;
+const ease = (x) => 1 + 2.7 * Math.pow(x - 1, 3) + 1.7 * Math.pow(x - 1, 2); // easeOutBack
+function renderOverlay(t) {
+  // captions
+  let html = '';
+  for (const [a, b, txt] of caps) {
+    if (t < a || t >= b) continue;
+    const kIn = Math.min(1, (t - a) / 0.22), kOut = Math.max(0, Math.min(1, (b - t) / 0.15));
+    const s = (0.6 + 0.4 * ease(kIn)) * (0.9 + 0.1 * kOut);
+    const wob = Math.sin(t * 6) * 1.2;
+    html = `<div class="cap" style="opacity:${Math.min(kIn * 1.6, kOut)};transform:scale(${s.toFixed(3)}) rotate(${(wob * 0.6).toFixed(2)}deg);transform-origin:${MODE === 'h' ? '0% 50%' : '50% 50%'}"><span>${txt}</span></div>`;
+  }
+  capsEl.innerHTML = html;
+  // ripples
+  for (let i = ripples.length - 1; i >= 0; i--) {
+    const r = ripples[i]; r.t += 1 / FPS;
+    const k = r.t / 0.35;
+    if (k >= 1) { r.el.remove(); ripples.splice(i, 1); continue; }
+    r.el.style.transform = `scale(${0.5 + k * 0.9})`; r.el.style.opacity = String(1 - k);
+  }
+  // background orbs drift
+  orbs.forEach((o, i) => { o.style.left = (50 + 40 * Math.sin(t * 0.4 + i * 1.3)) + '%'; o.style.top = (50 + 38 * Math.cos(t * 0.33 + i * 2.1)) + '%'; o.style.transform = 'translate(-50%,-50%)'; });
+  // end card
+  const E0 = 26.6;
+  const ke = Math.max(0, Math.min(1, (t - E0) / 0.35));
+  endEl.style.opacity = String(ke);
+  if (ke > 0) {
+    endEl.querySelector('.rays').style.transform = `rotate(${t * 18}deg)`;
+    const pop = (d) => { const k = Math.max(0, Math.min(1, (t - E0 - d) / 0.3)); return 0.4 + 0.6 * ease(k); };
+    endEl.querySelector('img').style.transform = `scale(${pop(0.05)}) rotate(${Math.sin(t * 3) * 3}deg)`;
+    endEl.querySelector('h1').style.transform = `scale(${pop(0.18)})`;
+    const pulse = 1 + 0.06 * Math.sin((t - E0) * 7);
+    endEl.querySelector('.btn').style.transform = `scale(${(pop(0.4) * pulse).toFixed(3)})`;
+  }
+}
+window.__warmup = (n) => { for (let i = 0; i < n; i++) step(1000 / FPS); };
+window.__frame = (f) => {
+  const t = f / FPS; cur = t;
+  for (const c of cues) if (!c.done && c.t <= t + 1e-6) { c.done = true; try { c.fn(); } catch (e) { console.error('cue', c.t, e); } }
+  step(1000 / FPS);
+  renderOverlay(t);
+};
+</script>
+</body>
+</html>

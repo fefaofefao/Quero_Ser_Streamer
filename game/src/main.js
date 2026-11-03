@@ -9,7 +9,7 @@ import { sfx, unlockAudio, setAudio, suspendAudio } from './audio.js';
 import { $, $$, modal, toast, confirmBox, closeTopModal, modalOpen, esc, bump } from './ui/dom.js';
 import { ic, marketBadge } from './ui/icons.js';
 import { initFx, stepFx, confetti, sparkles, coinBurst, setArriveHandler } from './ui/fx.js';
-import { initScene, stepScene, refreshScene, onHype, setExpr, pushChat, setScenePaused } from './ui/scene.js';
+import { initScene, stepScene, refreshScene, onHype, setExpr, pushChat, setScenePaused, forceEvent } from './ui/scene.js';
 import { initPanels, showTab, refresh as refreshPanel, render as renderPanel, ui, currentTab } from './ui/panels.js';
 import * as M from './ui/modals.js';
 import { avatarEditor } from './ui/avatarEditor.js';
@@ -478,6 +478,6 @@ async function boot() {
 }
 
 // debug helpers for screenshots / QA in the browser
-window.__qss = { G, E, get S() { return S; }, refreshScene, renderPanel, showTab, setExpr, pushChat, startAutograph, M };
+window.__qss = { G, E, get S() { return S; }, refreshScene, renderPanel, showTab, setExpr, pushChat, startAutograph, M, fx: { confetti, sparkles, coinBurst }, onHype, forceEvent, setTabActive };
 
 window.addEventListener('load', boot);
