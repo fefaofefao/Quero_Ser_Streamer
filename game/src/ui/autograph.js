@@ -183,11 +183,18 @@ export function startAutograph(onEnd) {
           ${rareGems ? `<div class="ar-row"><span>${t('autoRare')}</span><b>${ic('gem')} ${rareGems}</b></div>` : ''}
           <div class="big-reward">${ic('gold')}<b>${fmt(res.gold)}</b></div>`,
         buttons: [
-          { label: t('collect'), cls: 'ghost', onClick: () => done(1) },
-          { label: `${ic('play')} ${t('autoDouble')}`, cls: 'ad', close: false, onClick: (a) => { ads.rewarded('autograph_double').then(ok => { if (ok) { a.close(); done(2); } }); } },
+          { label: t('collect'), cls: 'ghost', onClick: () => { if (claimed || watching) return false; done(1); } },
+          { label: `${ic('play')} ${t('autoDouble')}`, cls: 'ad', close: false, onClick: (a) => {
+            if (claimed || watching) return;
+            watching = true;
+            ads.rewarded('autograph_double').then(ok => { watching = false; if (ok && !claimed) { a.close(); done(2); } });
+          } },
         ],
       });
+      let claimed = false, watching = false;
       function done(mult) {
+        if (claimed) return;
+        claimed = true;
         G.finishAutograph(res, mult);
         const r = $('.big-reward', api.el).getBoundingClientRect();
         coinBurst(r.left + r.width / 2, r.top + r.height / 2, 14, $('#gold-pill .ic'));

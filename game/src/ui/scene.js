@@ -32,7 +32,9 @@ export function setScenePaused(p) {
   if (!p) { const n = performance.now(); nextChat = Math.max(nextChat, n + 800); }
 }
 
+let resizeObs = null;
 export function initScene(root) {
+  paused = false;
   stage = root;
   stage.innerHTML = `
     <svg width="0" height="0" style="position:absolute">${ROOM_DEFS}</svg>
@@ -55,7 +57,9 @@ export function initScene(root) {
   inner.addEventListener('pointerdown', onTap);
   nextEvent = performance.now() + 25000;
   refreshScene(true);
-  new ResizeObserver(() => placeScreen()).observe(inner);
+  if (resizeObs) resizeObs.disconnect(); // initScene runs again on language change
+  resizeObs = new ResizeObserver(() => placeScreen());
+  resizeObs.observe(inner);
 }
 
 let arms = [];

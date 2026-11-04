@@ -17,29 +17,33 @@ function letters(i) {
 }
 
 export function fmt(x, digits = 2) {
+  if (Number.isNaN(x)) return '0';
   if (!isFinite(x)) return '∞';
   if (x < 0) return '-' + fmt(-x, digits);
   if (x < 1000) {
-    if (x < 10 && x % 1 !== 0) return x.toFixed(1).replace('.', decimalSep);
+    if (x < 10 && x % 1 !== 0) { const s1 = x.toFixed(1); return s1 === '10.0' ? '10' : s1.replace('.', decimalSep); }
     return Math.floor(x).toString();
   }
   if (notation === 'sci') {
     const e = Math.floor(Math.log10(x));
     return (x / 10 ** e).toFixed(2).replace('.', decimalSep) + 'e' + e;
   }
-  const i = Math.floor(Math.log10(x) / 3);
-  const v = x / 10 ** (i * 3);
-  const d = v >= 100 ? 0 : v >= 10 ? 1 : digits;
+  let i = Math.floor(Math.log10(x) / 3);
+  let v = x / 10 ** (i * 3);
+  let d = v >= 100 ? 0 : v >= 10 ? 1 : digits;
+  if (+v.toFixed(d) >= 1000) { i++; v /= 1000; d = digits; } // 999 999 -> 1.00M, not 1000K
   const suf = i < SUFFIX.length ? SUFFIX[i] : letters(i);
   return v.toFixed(d).replace('.', decimalSep) + suf;
 }
 
 export function fmtInt(x) {
+  if (!Number.isFinite(x)) return '0';
+  if (x >= 1e15) return fmt(x);
   return Math.floor(x).toString().replace(/\B(?=(\d{3})+(?!\d))/g, decimalSep === ',' ? '.' : ',');
 }
 
 export function fmtTime(sec) {
-  sec = Math.max(0, Math.floor(sec));
+  sec = Math.max(0, Math.floor(sec) || 0);
   const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60;
   if (h >= 24) return `${Math.floor(h / 24)}d ${h % 24}h`;
   if (h) return `${h}h ${String(m).padStart(2, '0')}m`;

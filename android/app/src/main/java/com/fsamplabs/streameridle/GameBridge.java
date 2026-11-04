@@ -63,6 +63,7 @@ public class GameBridge {
     }
 
     void destroy() {
+        if (ads != null) ads.destroy();
         if (billing != null) billing.destroy();
     }
 
@@ -177,7 +178,7 @@ public class GameBridge {
     }
 
     @JavascriptInterface
-    public String cloudStatus() { return cloud.status().toString(); }
+    public String cloudStatus() { Cloud c = cloud; return c != null ? c.status().toString() : "{\"available\":false}"; }
 
     @JavascriptInterface
     public void cloudSignIn(String cb) { main.post(new Runnable() { @Override public void run() { cloud.signIn(reply(cb)); } }); }

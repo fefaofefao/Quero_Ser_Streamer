@@ -4,3 +4,7 @@
 }
 -keepattributes JavascriptInterface
 -keepattributes *Annotation*
+
+# Credential Manager (Google sign-in for cloud save), per Android docs
+-if class androidx.credentials.CredentialManager
+-keep class androidx.credentials.playservices.** { *; }

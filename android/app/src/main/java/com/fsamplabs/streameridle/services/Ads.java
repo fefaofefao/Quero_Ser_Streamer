@@ -77,7 +77,16 @@ public class Ads {
         }))).start();
     }
 
+    private boolean destroyed;
+    /** Activity is going away (finish or recreate): stop retries and drop any waiting reply. */
+    public void destroy() {
+        destroyed = true;
+        main.removeCallbacksAndMessages(null);
+        if (waiting != null) { GameBridge.Reply r = waiting; waiting = null; r.send(GameBridge.ok(false)); }
+    }
+
     private void loadRewarded() {
+        if (destroyed) return;
         if (rewarded != null || loadingRewarded || !initialized.get()) return;
         loadingRewarded = true;
         RewardedAd.load(activity, activity.getString(R.string.admob_rewarded_id), new AdRequest.Builder().build(), new RewardedAdLoadCallback() {
@@ -104,6 +113,7 @@ public class Ads {
     }
 
     private void loadInterstitial() {
+        if (destroyed) return;
         if (interstitial != null || loadingInterstitial || !initialized.get()) return;
         loadingInterstitial = true;
         InterstitialAd.load(activity, activity.getString(R.string.admob_interstitial_id), new AdRequest.Builder().build(), new InterstitialAdLoadCallback() {

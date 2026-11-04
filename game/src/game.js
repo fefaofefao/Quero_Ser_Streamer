@@ -529,7 +529,8 @@ export function seasonIndex(t = now()) { return Math.max(0, Math.floor((t - SEAS
 export function seasonEndsIn() { return SEASON.epoch + (seasonIndex() + 1) * SEASON.days * 86400000 - now(); }
 export function resetSeason() {
   const id = seasonIndex();
-  if (!S.season || S.season.id !== id) S.season = { id, xp: 0, premium: false, free: [], prem: [] };
+  // only a newer season resets the pass (a clock moved backwards must not wipe a bought pass)
+  if (!S.season || id > S.season.id) S.season = { id, xp: 0, premium: false, free: [], prem: [] };
   return S.season;
 }
 export function addSeasonXp(n) {

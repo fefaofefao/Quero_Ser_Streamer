@@ -6,7 +6,7 @@ import { setLang, detectLang, t, lang } from './i18n.js';
 import { fmt, fmtTime, fmtMult } from './format.js';
 import { bridge } from './bridge.js';
 import { sfx, unlockAudio, setAudio, suspendAudio } from './audio.js';
-import { $, $$, modal, toast, confirmBox, closeTopModal, modalOpen, esc, bump } from './ui/dom.js';
+import { $, $$, modal, toast, confirmBox, closeTopModal, modalOpen, clearModals, esc, bump } from './ui/dom.js';
 import { ic, marketBadge } from './ui/icons.js';
 import { initFx, stepFx, confetti, sparkles, coinBurst, setArriveHandler } from './ui/fx.js';
 import { initScene, stepScene, refreshScene, onHype, setExpr, pushChat, setScenePaused, forceEvent } from './ui/scene.js';
@@ -23,6 +23,7 @@ import { PRODUCTS, ECO } from './data.js';
 const PRIVACY_URL = 'https://fefaofefao.github.io/quero-ser-streamer/privacy.html';
 const SUPPORT_MAIL = 'mailto:fe.m.sampaio@hotmail.com?subject=Quero%20ser%20Streamer';
 let S;
+let lastRestore = 0;
 
 // ---------------- layout ----------------
 // The UI is designed for ~400 CSS px wide phones. Narrower or shorter screens (e.g. a Galaxy S21,
@@ -206,7 +207,9 @@ async function purchase(p, after) {
   if (r && r.ok) {
     applyPurchase(p.id, r.token);
     after && after();
-  } else if (r && r.error && r.error !== 'canceled') toast(t('purchaseFailed'));
+  } else if (r && r.error === 'owned') { await restore(true); after && after(); } // bought before (other device / not delivered yet)
+  else if (r && r.error === 'pending') toast(t('purchasePending'));
+  else if (r && r.error && r.error !== 'canceled') toast(t('purchaseFailed'));
 }
 function applyPurchase(id, token) {
   S.iap.tokens = S.iap.tokens || [];
@@ -389,6 +392,7 @@ function bindUi() {
 }
 
 function rebuild() {
+  clearModals();
   buildLayout();
   initFx($('#fx'));
   initScene($('#stage'));
@@ -405,6 +409,8 @@ function wireNative() {
   bridge.on('pause', () => { persist(S); scheduleNotifications(); suspendAudio(true); const st = bridge.cloudStatus(); if (st.signedIn) bridge.cloudSave(persist(S)); });
   bridge.on('resume', () => {
     suspendAudio(false);
+    // pick up renewals (monthly pass) and purchases finished outside the app
+    if (Date.now() - lastRestore > 10 * 60e3) { lastRestore = Date.now(); restore(false); }
     const o = G.computeOffline();
     if (o && o.sec > 120) M.offlineModal(o);
     S.lastSeen = Date.now();
@@ -451,6 +457,9 @@ async function boot() {
   const offline = fresh ? null : G.computeOffline();
   rebuild();
   bridge.queryProducts(PRODUCTS.map(p => p.id)).then(r => { if (r && r.products) M.setPrices(r.products); });
+  M.setPurchaseHandler(purchase);
+  lastRestore = Date.now();
+  restore(false); // every boot, first launch included (reinstall gets Remove Ads / Gold Boost back)
   requestAnimationFrame((n) => { last = n; requestAnimationFrame(loop); });
   document.body.classList.add('ready');
   bridge.ready();
@@ -470,7 +479,6 @@ async function boot() {
   }
   const afterOffline = () => {
     if (!S.login.claimedToday) setTimeout(() => M.loginModal(), 300);
-    restore(false);
     setTimeout(() => cloudCheck(false), 1500);
   };
   if (offline) M.offlineModal(offline, afterOffline); else afterOffline();

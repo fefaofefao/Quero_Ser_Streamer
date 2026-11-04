@@ -58,7 +58,7 @@ function migrate(s) {
   const base = newState();
   const fill = (dst, src) => {
     for (const k in src) {
-      if (dst[k] === undefined) dst[k] = src[k];
+      if (dst[k] === undefined || dst[k] === null) dst[k] = src[k];
       else if (src[k] && typeof src[k] === 'object' && !Array.isArray(src[k]) && typeof dst[k] === 'object') fill(dst[k], src[k]);
     }
   };
@@ -70,13 +70,13 @@ function migrate(s) {
 }
 
 export function loadState() {
-  let raw = null;
-  try { raw = bridge.loadSave(); } catch (e) { /* ignore */ }
-  try {
-    const ls = localStorage.getItem(SAVE_KEY);
-    if (ls && (!raw || safeParse(ls)?.lastSeen > safeParse(raw)?.lastSeen)) raw = ls;
-  } catch (e) { /* storage blocked */ }
-  const s = raw ? safeParse(raw) : null;
+  // newest valid save wins (a corrupt copy never beats a good one)
+  let nat = null, loc = null;
+  try { nat = safeParse(bridge.loadSave()); } catch (e) { /* ignore */ }
+  try { loc = safeParse(localStorage.getItem(SAVE_KEY)); } catch (e) { /* storage blocked */ }
+  const ok = (x) => x && typeof x === 'object' && x.v ? x : null;
+  nat = ok(nat); loc = ok(loc);
+  const s = nat && loc ? ((loc.lastSeen || 0) > (nat.lastSeen || 0) ? loc : nat) : (nat || loc);
   return s ? migrate(s) : null;
 }
 

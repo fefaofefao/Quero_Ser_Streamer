@@ -3,6 +3,7 @@
 
 const native = typeof window !== 'undefined' ? window.AndroidBridge : null;
 let cbSeq = 0;
+const cbPrefix = 'c' + Math.random().toString(36).slice(2, 7) + '_'; // replies from a previous page load can't match
 const pending = new Map();
 const listeners = {};
 
@@ -25,7 +26,7 @@ if (typeof window !== 'undefined') {
 function call(method, ...args) {
   return new Promise((resolve) => {
     if (!native || typeof native[method] !== 'function') { resolve(null); return; }
-    const id = 'c' + (++cbSeq);
+    const id = cbPrefix + (++cbSeq);
     pending.set(id, resolve);
     try { native[method](...args, id); } catch (e) { pending.delete(id); resolve({ ok: false, error: String(e) }); }
   });

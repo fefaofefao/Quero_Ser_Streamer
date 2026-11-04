@@ -3,6 +3,7 @@ let cv, ctx, W = 0, H = 0, dpr = 1;
 const parts = [];
 const texts = [];
 
+let fxResize = null;
 export function initFx(canvas) {
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => textCache.clear());
   cv = canvas; ctx = cv.getContext('2d');
@@ -13,6 +14,8 @@ export function initFx(canvas) {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   };
   resize();
+  if (fxResize) window.removeEventListener('resize', fxResize); // initFx runs again on language change
+  fxResize = resize;
   window.addEventListener('resize', resize);
 }
 

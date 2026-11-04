@@ -40,7 +40,10 @@ public class Billing implements PurchasesUpdatedListener {
     private final GameBridge bridge;
     private final Handler main = new Handler(Looper.getMainLooper());
     private final Map<String, ProductDetails> details = new HashMap<>();
+    // work waiting for the billing connection, with the reply to fail if Play Billing is unavailable
     private final List<Runnable> onReady = new ArrayList<>();
+    private final List<GameBridge.Reply> onReadyReplies = new ArrayList<>();
+    private boolean destroyed;
     private BillingClient client;
     private boolean connected, connecting;
     private GameBridge.Reply pendingBuy;
@@ -61,21 +64,25 @@ public class Billing implements PurchasesUpdatedListener {
     }
 
     private void connect() {
-        if (connected || connecting || client == null) return;
+        if (connected || connecting || client == null || destroyed) return;
         connecting = true;
         client.startConnection(new BillingClientStateListener() {
             @Override
             public void onBillingSetupFinished(BillingResult result) {
                 main.post(() -> {
+                    if (destroyed) return;
                     connecting = false;
                     connected = result.getResponseCode() == BillingClient.BillingResponseCode.OK;
                     if (connected) {
                         retry = 0;
                         List<Runnable> run = new ArrayList<>(onReady);
                         onReady.clear();
+                        onReadyReplies.clear();
                         for (Runnable r : run) r.run();
                         processExisting();
                     } else {
+                        // no Play Store / billing unavailable: answer everyone waiting instead of hanging
+                        failWaiting();
                         scheduleRetry();
                     }
                 });
@@ -84,6 +91,7 @@ public class Billing implements PurchasesUpdatedListener {
             @Override
             public void onBillingServiceDisconnected() {
                 main.post(() -> {
+                    if (destroyed) return;
                     connected = false;
                     connecting = false;
                     scheduleRetry();
@@ -92,20 +100,33 @@ public class Billing implements PurchasesUpdatedListener {
         });
     }
 
+    private final Runnable retryConnect = this::connect;
     private void scheduleRetry() {
+        if (destroyed) return;
         retry = Math.min(retry + 1, 6);
-        main.postDelayed(this::connect, (long) (Math.pow(2, retry) * 1000));
+        main.postDelayed(retryConnect, (long) (Math.pow(2, retry) * 1000));
     }
 
-    private void whenReady(Runnable r) {
+    private void failWaiting() {
+        List<GameBridge.Reply> replies = new ArrayList<>(onReadyReplies);
+        onReady.clear();
+        onReadyReplies.clear();
+        for (GameBridge.Reply r : replies) r.send(error("unavailable"));
+    }
+
+    private void whenReady(Runnable r, GameBridge.Reply reply) {
         if (connected) r.run();
         else {
             onReady.add(r);
+            onReadyReplies.add(reply);
             connect();
         }
     }
 
     public void destroy() {
+        destroyed = true;
+        main.removeCallbacks(retryConnect);
+        failWaiting();
         if (client != null) client.endConnection();
     }
 
@@ -134,7 +155,7 @@ public class Billing implements PurchasesUpdatedListener {
             if (!inapp.isEmpty()) queryList(inapp, done);
             if (!subs.isEmpty()) queryList(subs, done);
             if (left[0] == 0) reply.send(GameBridge.ok(true));
-        });
+        }, reply);
     }
 
     private void queryList(List<QueryProductDetailsParams.Product> list, Runnable done) {
@@ -163,6 +184,7 @@ public class Billing implements PurchasesUpdatedListener {
     // ------------------------------------------------------------ buying
     public void buy(String productId, GameBridge.Reply reply) {
         whenReady(() -> {
+            if (pendingBuy != null) { reply.send(error("busy")); return; } // a purchase sheet is already open
             ProductDetails pd = details.get(productId);
             if (pd == null) {
                 // details not loaded yet: fetch then retry once
@@ -176,7 +198,7 @@ public class Billing implements PurchasesUpdatedListener {
                 return;
             }
             launch(pd, reply);
-        });
+        }, reply);
     }
 
     private void launch(ProductDetails pd, GameBridge.Reply reply) {
@@ -205,6 +227,10 @@ public class Billing implements PurchasesUpdatedListener {
             int code = result.getResponseCode();
             if (code == BillingClient.BillingResponseCode.OK && purchases != null) {
                 for (Purchase p : purchases) handle(p);
+            } else if (code == BillingClient.BillingResponseCode.ITEM_ALREADY_OWNED) {
+                // e.g. gems whose consume failed earlier: finish delivering them now
+                if (pendingBuy != null) { pendingBuy.send(error("owned")); pendingBuy = null; }
+                processExisting();
             } else if (pendingBuy != null) {
                 pendingBuy.send(error(code == BillingClient.BillingResponseCode.USER_CANCELED ? "canceled" : "failed"));
                 pendingBuy = null;
@@ -213,21 +239,33 @@ public class Billing implements PurchasesUpdatedListener {
     }
 
     private void handle(Purchase p) {
-        if (p.getPurchaseState() != Purchase.PurchaseState.PURCHASED) return; // PENDING: delivered later
         String token = p.getPurchaseToken();
+        if (p.getPurchaseState() != Purchase.PurchaseState.PURCHASED) {
+            // PENDING (e.g. boleto/cash): delivered later by processExisting; tell the game now
+            if (pendingBuy != null && p.getProducts().contains(pendingProduct)) { pendingBuy.send(error("pending")); pendingBuy = null; }
+            return;
+        }
         for (String productId : p.getProducts()) {
             if (CONSUMABLE.contains(productId)) {
-                client.consumeAsync(ConsumeParams.newBuilder().setPurchaseToken(token).build(), (r, t) -> {
-                    if (r.getResponseCode() == BillingClient.BillingResponseCode.OK) main.post(() -> deliver(productId, token));
-                });
+                client.consumeAsync(ConsumeParams.newBuilder().setPurchaseToken(token).build(), (r, t) -> main.post(() -> {
+                    if (r.getResponseCode() == BillingClient.BillingResponseCode.OK) deliver(productId, token);
+                    else failed(productId);
+                }));
             } else if (!p.isAcknowledged()) {
-                client.acknowledgePurchase(AcknowledgePurchaseParams.newBuilder().setPurchaseToken(token).build(), r -> {
-                    if (r.getResponseCode() == BillingClient.BillingResponseCode.OK) main.post(() -> deliver(productId, token));
-                });
+                client.acknowledgePurchase(AcknowledgePurchaseParams.newBuilder().setPurchaseToken(token).build(), r -> main.post(() -> {
+                    if (r.getResponseCode() == BillingClient.BillingResponseCode.OK) deliver(productId, token);
+                    else failed(productId);
+                }));
             } else {
                 deliver(productId, token);
             }
         }
+    }
+
+    // consume/acknowledge failed (network...): answer the buyer and try again shortly
+    private void failed(String productId) {
+        if (pendingBuy != null && productId.equals(pendingProduct)) { pendingBuy.send(error("failed")); pendingBuy = null; }
+        if (!destroyed) main.postDelayed(this::processExisting, 15000);
     }
 
     private void deliver(String productId, String token) {
@@ -247,13 +285,20 @@ public class Billing implements PurchasesUpdatedListener {
 
     /** Purchases finished while the app was closed (or pending ones that cleared). */
     private void processExisting() {
+        if (destroyed || !connected) return;
         client.queryPurchasesAsync(QueryPurchasesParams.newBuilder().setProductType(BillingClient.ProductType.INAPP).build(), (r, list) -> main.post(() -> {
             if (r.getResponseCode() != BillingClient.BillingResponseCode.OK) return;
             for (Purchase p : list) {
+                if (p.getPurchaseState() != Purchase.PurchaseState.PURCHASED) continue;
                 boolean consumable = false;
                 for (String id : p.getProducts()) if (CONSUMABLE.contains(id)) consumable = true;
                 if (consumable || !p.isAcknowledged()) handle(p);
             }
+        }));
+        // subscriptions too: an unacknowledged monthly pass is refunded by Play after 3 days
+        client.queryPurchasesAsync(QueryPurchasesParams.newBuilder().setProductType(BillingClient.ProductType.SUBS).build(), (r, list) -> main.post(() -> {
+            if (r.getResponseCode() != BillingClient.BillingResponseCode.OK) return;
+            for (Purchase p : list) if (p.getPurchaseState() == Purchase.PurchaseState.PURCHASED && !p.isAcknowledged()) handle(p);
         }));
     }
 
@@ -268,7 +313,7 @@ public class Billing implements PurchasesUpdatedListener {
                         if (p.getPurchaseState() == Purchase.PurchaseState.PURCHASED) {
                             for (String id : p.getProducts()) owned.put(id);
                             monthly[0] = System.currentTimeMillis() + 36L * 3600_000L;
-                            if (!p.isAcknowledged()) handle(p);
+                            if (!p.isAcknowledged()) main.post(() -> handle(p));
                         }
                     }
                     JSONObject o = GameBridge.ok(true);
@@ -279,7 +324,7 @@ public class Billing implements PurchasesUpdatedListener {
                     reply.send(o);
                 });
             });
-        });
+        }, reply);
     }
 
     private static JSONObject error(String code) {

@@ -36,7 +36,7 @@ import java.util.concurrent.Executors;
  */
 public class Cloud {
     private final Activity activity;
-    private final Executor executor = Executors.newSingleThreadExecutor();
+    private final Executor executor = Executors.newSingleThreadExecutor(r -> { Thread t = new Thread(r, "cloud"); t.setDaemon(true); return t; });
 
     public Cloud(Activity activity) {
         this.activity = activity;

@@ -19,7 +19,8 @@ export const ads = {
     if (bridge.isNative && !bridge.rewardedReady()) toast(ic('play') + ' ' + t('adLoading'));
     suspendAudio(true);
     try {
-      const r = await bridge.showRewarded(placement);
+      // never stay "busy" forever if the native side does not answer
+      const r = await Promise.race([bridge.showRewarded(placement), new Promise(res => setTimeout(() => res({ ok: false, timeout: true }), 90000))]);
       if (r && r.ok && r.rewarded !== false) {
         S.stats.ads = (S.stats.ads || 0) + 1;
         bridge.log('ad_rewarded', { placement });

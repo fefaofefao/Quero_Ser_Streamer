@@ -190,6 +190,7 @@ const pt = {
   seasonPass: 'Passe de temporada', seasonEnds: 'Termina em {t}', seasonPremium: 'Trilha Premium', seasonPremiumD: '1.000+ diamantes, passes e um item lendário exclusivo.',
   seasonHow: 'Ganhe XP completando missões, o baú do dia, eventos de autógrafos, metas semanais e o presente diário.', seasonTierUp: 'Passe de temporada: nível {n}!',
   adLoading: 'Carregando o anúncio...',
+  purchasePending: 'Pagamento pendente: o item chega assim que for aprovado.',
 };
 
 const en = {
@@ -338,6 +339,7 @@ const en = {
   seasonPass: 'Season pass', seasonEnds: 'Ends in {t}', seasonPremium: 'Premium track', seasonPremiumD: '1,000+ diamonds, passes and an exclusive legendary item.',
   seasonHow: 'Earn XP from missions, the daily chest, autograph events, weekly goals and the daily gift.', seasonTierUp: 'Season pass: tier {n}!',
   adLoading: 'Loading the ad...',
+  purchasePending: 'Payment pending: the item arrives as soon as it is approved.',
 };
 
 const es = {
@@ -477,6 +479,7 @@ const es = {
   seasonPass: 'Pase de temporada', seasonEnds: 'Termina en {t}', seasonPremium: 'Ruta Premium', seasonPremiumD: '1.000+ diamantes, pases y un ítem legendario exclusivo.',
   seasonHow: 'Gana XP con misiones, el cofre del día, eventos de autógrafos, metas semanales y el regalo diario.', seasonTierUp: 'Pase de temporada: ¡nivel {n}!',
   adLoading: 'Cargando el anuncio...',
+  purchasePending: 'Pago pendiente: el artículo llega en cuanto se apruebe.',
 };
 
 export const LANGS = { pt, en, es };

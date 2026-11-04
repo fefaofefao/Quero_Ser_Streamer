@@ -23,6 +23,7 @@ const goldBurst = (el) => { const [x, y] = ctr(el); coinBurst(x, y, 12, goldPill
 
 // ---------------- offline ----------------
 export function offlineModal(o, done) {
+  let claimed = false, watching = false;
   const m = modal({
     cls: 'offline', noBackdropClose: true, noClose: true,
     title: t('offlineTitle'), icon: ic('clock'),
@@ -32,11 +33,17 @@ export function offlineModal(o, done) {
       ${o.fame > 1 ? `<p class="center small">${ic('star')} +${fmt(o.fame)} ${t('fame')}</p>` : ''}
       ${o.capped ? `<p class="center muted small">${t('offlineCap')}</p>` : ''}`,
     buttons: [
-      { label: t('collect'), cls: 'ghost', onClick: (api) => { G.applyOffline(o, 1); goldBurst($('.big-reward', api.el)); sfx.coin(); done && done(); } },
+      { label: t('collect'), cls: 'ghost', onClick: (api) => {
+        if (claimed || watching) return false; // an ad is on its way: wait for it
+        claimed = true; G.applyOffline(o, 1); goldBurst($('.big-reward', api.el)); sfx.coin(); done && done();
+      } },
       { label: `${ic('play')} ${t('offlineDouble')} ${fmt(o.gold * 2)}`, cls: 'primary ad', close: false, onClick: (api) => {
+        if (claimed || watching) return;
+        watching = true;
         ads.rewarded('offline_double').then(ok => {
-          if (!ok) return;
-          G.applyOffline(o, 2); goldBurst($('.big-reward', api.el)); sfx.coin(); api.close(); done && done();
+          watching = false;
+          if (!ok || claimed) return;
+          claimed = true; G.applyOffline(o, 2); goldBurst($('.big-reward', api.el)); sfx.coin(); api.close(); done && done();
         });
       } },
     ],
@@ -228,6 +235,9 @@ export function letterModal(key, onClose) {
 
 // ---------------- shop ----------------
 let priceCache = {};
+// purchase flow from main.js, so every way into the shop can sell
+let purchaseHandler = null;
+export function setPurchaseHandler(fn) { purchaseHandler = fn; }
 export function setPrices(p) { priceCache = p || {}; }
 const priceOf = (p) => priceCache[p.id] || p.price;
 
@@ -275,7 +285,7 @@ function piggyArt(fill) {
   </svg>`;
 }
 
-export function shopModal(onPurchase) {
+export function shopModal(onPurchase = purchaseHandler) {
   if (!S.offers.starterUntil && !S.iap.starter) S.offers.starterUntil = Date.now() + 48 * 3600e3;
   const draw = (api) => {
     const P = (id) => PRODUCTS.find(p => p.id === id);

@@ -26,6 +26,8 @@ public class MainActivity extends Activity {
     private GameBridge bridge;
     private int insetTop, insetBottom;
     private OnBackInvokedCallback backCallback;
+    private static int rendererCrashes;
+    private static long lastRendererCrash;
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
@@ -73,7 +75,12 @@ public class MainActivity extends Activity {
 
             @Override
             public boolean onRenderProcessGone(WebView view, RenderProcessGoneDetail detail) {
-                // The WebView renderer crashed (low memory): rebuild the screen instead of dying.
+                // The WebView renderer crashed (low memory): rebuild the screen instead of dying,
+                // but never loop: after repeated crashes in a short time, close cleanly.
+                long now = System.currentTimeMillis();
+                if (now - lastRendererCrash > 60_000) rendererCrashes = 0;
+                lastRendererCrash = now;
+                if (++rendererCrashes > 2) { finish(); return true; }
                 recreate();
                 return true;
             }

@@ -48,11 +48,13 @@ export function playIntro(done) {
     el.innerHTML = `<div class="comic in"><div class="panel">${panel(i)}</div><p>${t(texts[i])}</p><div class="dots">${texts.map((_, k) => `<i class="${k === i ? 'on' : ''}"></i>`).join('')}</div><small class="tap">▶</small></div><button class="skip">${t('next')} ›</button>`;
   };
   show();
+  let finished = false;
   el.addEventListener('click', (e) => {
+    if (finished) return; // taps during the fade-out must not open a second creator
     sfx.click();
     if (e.target.closest('.skip') && i < texts.length - 1) i = texts.length - 1;
     else i++;
-    if (i >= texts.length) { el.classList.add('out'); setTimeout(() => el.remove(), 400); done(); return; }
+    if (i >= texts.length) { finished = true; el.classList.add('out'); setTimeout(() => el.remove(), 400); done(); return; }
     show();
   });
 }

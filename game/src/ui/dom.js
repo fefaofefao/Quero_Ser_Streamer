@@ -33,6 +33,7 @@ export function modal(opts) {
       opts.onClose && opts.onClose();
     },
   };
+  api.opts = opts;
   stack.push(api);
   el.addEventListener('click', (e) => {
     if (e.target === el && !opts.noClose && !opts.noBackdropClose) { api.close(); return; }
@@ -49,7 +50,10 @@ export function modal(opts) {
 }
 
 export function topModal() { return stack[stack.length - 1]; }
-export function closeTopModal() { const m = topModal(); if (m) { m.close(); return true; } return false; }
+// Android back: closes the top window, except windows that must be answered (noClose): back is swallowed.
+export function closeTopModal() { const m = topModal(); if (m) { if (!m.opts.noClose) m.close(); return true; } return false; }
+// Used when the whole UI is rebuilt (language change): drop every window.
+export function clearModals() { for (const m of stack.splice(0)) { m.closed = true; m.el.remove(); } }
 export function modalOpen() { return stack.length > 0; }
 
 export function confirmBox(text, onYes, yesLabel) {

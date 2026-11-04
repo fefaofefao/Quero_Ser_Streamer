@@ -44,7 +44,7 @@ jobs:
             printf '%s' "$GOOGLE_SERVICES_JSON" > android/app/google-services.json
             echo "google-services.json written"
           else
-            echo "::warning::GOOGLE_SERVICES_JSON not set: building without Firebase"
+            echo "::error::GOOGLE_SERVICES_JSON is missing: a release would ship without Firebase"; exit 1
           fi
 
       - name: AdMob ids
@@ -57,7 +57,7 @@ jobs:
           f=android/app/src/main/res/values/ads.xml
           clean() { printf '%s' "$1" | tr -d ' \t\r\n"'"'"; }
           app=$(clean "$ADMOB_APP_ID"); rew=$(clean "$ADMOB_REWARDED_ID"); int=$(clean "$ADMOB_INTERSTITIAL_ID")
-          if [ -z "$app$rew$int" ]; then echo "::warning::AdMob secrets not set: using Google test ids"; exit 0; fi
+          if [ -z "$app$rew$int" ]; then echo "::error::AdMob secrets are missing: a release would ship Google TEST ads"; exit 1; fi
           # Shape report without revealing the ids: length, prefix, separator.
           shape() { v="$2"; echo "$1: length=${#v} prefix_ok=$([[ $v == ca-app-pub-* ]] && echo yes || echo no) has_tilde=$([[ $v == *~* ]] && echo yes || echo no) has_slash=$([[ $v == */* ]] && echo yes || echo no)"; }
           shape ADMOB_APP_ID "$app"; shape ADMOB_REWARDED_ID "$rew"; shape ADMOB_INTERSTITIAL_ID "$int"
