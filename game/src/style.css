@@ -780,3 +780,9 @@ em.hype { font-style: normal; font-size: 11px; background: var(--pink); color: #
 .ears { animation: swing 2.4s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 100%; }
 .opt.lk.rar-common svg, .opt.lk.rar-rare svg, .opt.lk.rar-epic svg, .opt.lk.rar-legendary svg { filter: none; }
 .monthly .big-val { white-space: normal; font-size: 15px; }
+
+/* Render containment: each area of the screen is independent, so a change in one (taps, counters,
+   chat, panel refresh) doesn't make the browser re-check the others. No visual change. */
+.stage-inner { contain: strict; }
+#panel { contain: strict; }
+#top, #quick, #hype, #tabs { contain: layout style; }
