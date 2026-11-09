@@ -62,6 +62,7 @@ export const bridge = {
     return r || { ok: false };
   },
   showInterstitial(placement) { if (native) sync('showInterstitial', placement); },
+  prepareInterstitial() { if (native) sync('prepareInterstitial'); },
   rewardedReady() { const r = sync('isRewardedReady'); return r === undefined ? true : !!r; },
 
   async queryProducts(ids) {

@@ -125,6 +125,11 @@ public class GameBridge {
     }
 
     @JavascriptInterface
+    public void prepareInterstitial() {
+        main.post(new Runnable() { @Override public void run() { if (ads != null) ads.prepareInterstitial(); } });
+    }
+
+    @JavascriptInterface
     public boolean isRewardedReady() { return ads != null && ads.rewardedReady(); }
 
     @JavascriptInterface

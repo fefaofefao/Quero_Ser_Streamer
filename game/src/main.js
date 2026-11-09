@@ -138,7 +138,7 @@ function wireEvents() {
     refreshScene();
     renderPanel();
     if (first) {
-      M.marketCelebrate(m);
+      M.marketCelebrate(m, () => ads.interstitial('market_unlock'));
       bridge.log('market_unlock', { market: E.MARKETS[m].id });
       if (S.tutorial <= 2) tutAdvance(3);
       if (m === 1 && S.tutorial < 4) setTimeout(() => toast(ic('star') + ' ' + t('tut4')), 1500);
@@ -175,7 +175,7 @@ function wireEvents() {
     refreshScene(true); renderPanel();
     setExpr('excited', 3000);
     bridge.log('equip_upgrade', { id, lv });
-    if (!extra) M.celebrate({ title: t('equipUpgraded'), sub: `<b>${t('eq_' + id + '_' + lv)}</b>`, art: `<div class="eq-hero">${equipIconSVG(id, lv)}</div>`, cls: 'small-cel' });
+    if (!extra) M.celebrate({ title: t('equipUpgraded'), sub: `<b>${t('eq_' + id + '_' + lv)}</b>`, art: `<div class="eq-hero">${equipIconSVG(id, lv)}</div>`, cls: 'small-cel', onClose: () => ads.interstitial('gear_upgrade') });
   });
   G.on('plaque', (p) => {
     refreshScene(true);
@@ -350,7 +350,7 @@ function loop(now) {
   if (hudT > 0.2) { hudT = 0; updateHud(now); }
   if (panelT > 0.25) { panelT = 0; if (!covered) refreshPanel(); }
   if (saveT > 10) { saveT = 0; persist(S); }
-  if (sceneT > 60) { sceneT = 0; refreshScene(); G.resetDaily(); }
+  if (sceneT > 60) { sceneT = 0; refreshScene(); G.resetDaily(); ads.prepare(); }
   if (cloudT > 300) { cloudT = 0; const st = bridge.cloudStatus(); if (st.signedIn) bridge.cloudSave(persist(S)); }
   requestAnimationFrame(loop);
 }

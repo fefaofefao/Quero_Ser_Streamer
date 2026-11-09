@@ -291,7 +291,7 @@ export function monthlyActive() { return S.iap.monthlyUntil > now(); }
 
 export function resetDaily() {
   const d = dayKey();
-  if (S.ads.day !== d) { S.ads.day = d; S.ads.gems = 0; S.ads.boost = 0; }
+  if (S.ads.day !== d) { S.ads.day = d; S.ads.gems = 0; S.ads.boost = 0; S.ads.warp = 0; }
   if (S.daily.day !== d) {
     S.daily.day = d;
     S.daily.chest = false;
@@ -351,13 +351,14 @@ export function claimMission(i) {
   return true;
 }
 export function chestReady() { return !S.daily.chest && S.daily.missions.length && S.daily.missions.every(m => m.claimed); }
-export function claimChest() {
+export function claimChest(mult = 1) {
   if (!chestReady()) return null;
   S.daily.chest = true;
   const gold = Math.max(1000, E.gpsNoBoost(S) * 900);
-  addGems(ECO.chestGems, 'chest'); piggyFeed(ECO.chestGems); addGold(gold);
+  const gems = ECO.chestGems * mult, g2 = gold * mult;
+  addGems(gems, 'chest'); piggyFeed(gems); addGold(g2);
   addSeasonXp(SEASON.xp.chest);
-  return { gems: ECO.chestGems, gold };
+  return { gems, gold: g2 };
 }
 export function claimWeekly(i) {
   const tier = WEEKLY_TIERS[i];
@@ -567,4 +568,28 @@ function grantSeasonReward(r) {
   if (r.boostMin) addBoost(r.boostMin);
   if (r.pass) S.autograph.passes += r.pass;
   if (r.item) { S.owned[r.item] = true; emit('cosmetic', { key: r.item }); }
+}
+
+// ---------- rewarded-ad extras ----------
+export function adWarpLeft() { resetDaily(); return Math.max(0, ECO.adWarpPerDay - (S.ads.warp || 0)); }
+export function grantAdWarp() {
+  if (adWarpLeft() <= 0) return 0;
+  S.ads.warp = (S.ads.warp || 0) + 1;
+  const v = E.gpsNoBoost(S) * 1800;
+  addGold(v); addFame(E.famePerSec(S) * 1800);
+  return v;
+}
+// Floating gift on the stream: one of three rewards, chosen when it appears.
+export function rollGift() {
+  const r = Math.random();
+  if (r < 0.34) return { kind: 'x3', min: 10 };
+  if (r < 0.67) return { kind: 'gems', n: 5 };
+  return { kind: 'gold', min: 20 };
+}
+export function grantGift(g) {
+  const t = now();
+  if (g.kind === 'x3') S.boosts.x3Until = Math.min(t + 240 * 60000, Math.max(t, S.boosts.x3Until || 0) + g.min * 60000);
+  if (g.kind === 'gems') { addGems(g.n, 'gift'); piggyFeed(g.n); }
+  if (g.kind === 'gold') { g.v = Math.max(100, E.gpsNoBoost(S) * g.min * 60); addGold(g.v); }
+  return g;
 }

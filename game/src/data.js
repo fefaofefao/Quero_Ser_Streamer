@@ -133,7 +133,9 @@ export const ECO = {
   weeklyGems: [20, 40, 80],
   achMult: 0.5,       // achievements pay half of the table below
   adGems: 5,          // diamonds per rewarded ad in the shop
-  adGemsPerDay: 5,
+  adGemsPerDay: 8,
+  adWarpPerDay: 3,    // free 30-min time skips for an ad, per day
+  giftEverySec: 240,  // floating ad gift on the stream
   piggyMax: 900,
   piggyRate: 0.25,    // share of earned diamonds that also drops in the piggy bank
   firstBuyMult: 2,    // first purchase of each diamond pack

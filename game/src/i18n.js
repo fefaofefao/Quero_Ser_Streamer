@@ -191,6 +191,7 @@ const pt = {
   seasonHow: 'Ganhe XP completando missões, o baú do dia, eventos de autógrafos, metas semanais e o presente diário.', seasonTierUp: 'Passe de temporada: nível {n}!',
   adLoading: 'Carregando o anúncio...',
   purchasePending: 'Pagamento pendente: o item chega assim que for aprovado.',
+  adWarp: '30 min de Gold grátis', adWarpLeft: 'restam {n} hoje',
 };
 
 const en = {
@@ -340,6 +341,7 @@ const en = {
   seasonHow: 'Earn XP from missions, the daily chest, autograph events, weekly goals and the daily gift.', seasonTierUp: 'Season pass: tier {n}!',
   adLoading: 'Loading the ad...',
   purchasePending: 'Payment pending: the item arrives as soon as it is approved.',
+  adWarp: '30 min of Gold for free', adWarpLeft: '{n} left today',
 };
 
 const es = {
@@ -480,6 +482,7 @@ const es = {
   seasonHow: 'Gana XP con misiones, el cofre del día, eventos de autógrafos, metas semanales y el regalo diario.', seasonTierUp: 'Pase de temporada: ¡nivel {n}!',
   adLoading: 'Cargando el anuncio...',
   purchasePending: 'Pago pendiente: el artículo llega en cuanto se apruebe.',
+  adWarp: '30 min de Oro gratis', adWarpLeft: 'quedan {n} hoy',
 };
 
 export const LANGS = { pt, en, es };

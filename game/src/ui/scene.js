@@ -5,7 +5,8 @@ import { makeGame, GW, GH } from '../art/games.js';
 import * as E from '../economy.js';
 import * as G from '../game.js';
 import { S } from '../game.js';
-import { CHAT, randomUser, USER_COLORS } from '../data.js';
+import { CHAT, randomUser, USER_COLORS, ECO } from '../data.js';
+import { ads } from './ads.js';
 import { t, lang } from '../i18n.js';
 import { fmt } from '../format.js';
 import { $, esc } from './dom.js';
@@ -17,7 +18,7 @@ import { ic } from './icons.js';
 let stage, inner, belowSvg, aboveSvg, screen, sctx, face, chatEl, liveEl, evLayer, lagEl, hypeBanner;
 let game = null, gameId = '', roomKey = '', faceKey = '';
 let expr = 'neutral', exprUntil = 0;
-let nextChat = 0, nextEvent = 0, lagActive = false, lagTaps = 0;
+let nextChat = 0, nextEvent = 0, nextGift = 0, lagActive = false, lagTaps = 0;
 let tapCount = 0, lastTapAt = 0;
 let transition = 0;
 let gameAcc = 0, paused = false;
@@ -56,6 +57,7 @@ export function initScene(root) {
   evLayer = $('.ev-layer', stage); lagEl = $('.lag', stage); hypeBanner = $('.hype-banner', stage);
   inner.addEventListener('pointerdown', onTap);
   nextEvent = performance.now() + 25000;
+  nextGift = performance.now() + 90000;
   refreshScene(true);
   if (resizeObs) resizeObs.disconnect(); // initScene runs again on language change
   resizeObs = new ResizeObserver(() => placeScreen());
@@ -219,6 +221,36 @@ function spawnFloat(kind) {
   });
 }
 
+// Floating gift: an optional rewarded ad for a small, clearly shown reward.
+function spawnGift() {
+  const g = G.rollGift();
+  const el = document.createElement('button');
+  el.className = 'ev-item ev-gift';
+  const label = g.kind === 'x3' ? `${ic('rocket')}<b>x3 · ${g.min}m</b>` : g.kind === 'gems' ? `${ic('gem')}<b>+${g.n}</b>` : `${ic('gold')}<b>+${g.min}m</b>`;
+  el.innerHTML = `<span class="gf-box">${ic('gift')}</span><span class="gf-txt">${label}</span><span class="gf-ad">${ic('play')}</span>`;
+  el.style.left = (8 + Math.random() * 52) + '%'; el.style.top = (16 + Math.random() * 40) + '%';
+  evLayer.appendChild(el);
+  requestAnimationFrame(() => el.classList.add('in'));
+  bridge.log('gift_shown', { kind: g.kind });
+  const life = setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 400); }, 12000);
+  el.addEventListener('pointerdown', (e) => {
+    e.stopPropagation();
+    clearTimeout(life);
+    el.classList.add('pop');
+    setTimeout(() => el.remove(), 300);
+    const bx = e.clientX, by = e.clientY;
+    ads.rewarded('stage_gift').then(ok => {
+      if (!ok) return;
+      G.grantGift(g);
+      sfx.levelUp(); sparkles(bx, by, 20, '#ffd23f');
+      if (g.kind === 'gems') coinBurst(bx, by, g.n, $('#gem-pill .ic'), 'gem');
+      else if (g.kind === 'gold') { coinBurst(bx, by, 12, $('#gold-pill .ic')); floatText(bx, by, '+' + fmt(g.v), '#ffd23f', 22); }
+      else floatText(bx, by, 'x3!', '#ffd23f', 26);
+      setExpr('excited', 2500);
+    });
+  });
+}
+
 function doRaid() {
   const user = randomUser();
   const n = Math.max(5, Math.round(viewers() * (0.3 + Math.random())));
@@ -284,6 +316,10 @@ export function stepScene(dt, now) {
     pushChat(chatLine());
     const rate = Math.min(5, 0.5 + Math.log10(S.fame + 10) * 0.35) * (G.hypeActive() ? 2.5 : 1);
     nextChat = now + (2500 + Math.random() * 3500) / rate;
+  }
+  if (now > nextGift) {
+    if (S.tutorial >= 3 && (S.stats.playSec || 0) > 120 && !lagActive && !evLayer.querySelector('.ev-gift')) spawnGift();
+    nextGift = now + ECO.giftEverySec * 1000 * (0.8 + Math.random() * 0.4);
   }
   if (now > nextEvent && !document.querySelector('.ev-item')) {
     if (S.tutorial >= 3) spawnEvent();

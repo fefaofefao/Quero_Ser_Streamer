@@ -41,7 +41,7 @@ export function newState() {
     daily: { day: '', missions: [], chest: false, rerolls: 0 },
     weekly: { week: '', done: 0, claimed: [] },
     login: { last: '', cycle: 0, claimedToday: false, days: 0 },
-    ads: { day: '', gems: 0, boost: 0 },
+    ads: { day: '', gems: 0, boost: 0, warp: 0 },
     achievements: {},          // id -> tiers claimed count
     stats: { taps: 0, upgrades: 0, community: 0, signed: 0, events: 0, clips: 0, missions: 0, playSec: 0, days: 0 },
     iap: { removeAds: false, starter: false, goldBoost: false, monthlyUntil: 0, monthlyClaim: '', piggy: 0, firsts: {} },

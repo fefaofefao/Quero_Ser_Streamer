@@ -94,7 +94,7 @@ export function missionsModal() {
     const chestReady = G.chestReady();
     const weekly = WEEKLY_TIERS.map((w, i) => `<button class="wk ${S.weekly.claimed.includes(i) ? 'got' : S.weekly.done >= w.n ? 'ready' : ''}" data-week="${i}"><b>${w.n}</b>${ic('gem')}<small>${weeklyGems(i)}</small></button>`).join('');
     api.body.innerHTML = `${rows}
-      <div class="chest ${chestReady ? 'ready' : ''} ${S.daily.chest ? 'got' : ''}" data-chest="1">${ic('gift')}<div><b>${t('chest')}</b><small>${t('missionsAll')}</small></div>${S.daily.chest ? ic('check') : `<span>${ic('gem')}${ECO.chestGems} + ${ic('gold')}</span>`}</div>
+      <div class="chest ${chestReady ? 'ready' : ''} ${S.daily.chest ? 'got' : ''}" data-chest="1">${ic('gift')}<div><b>${t('chest')}</b><small>${t('missionsAll')}</small></div>${S.daily.chest ? ic('check') : `<span>${ic('gem')}${ECO.chestGems} + ${ic('gold')}</span>`}${chestReady ? `<button class="btn ad sm x2btn" data-chest2="1">${ic('play')} x2</button>` : ''}</div>
       <h3 class="sec">${t('weekly')}</h3><p class="small muted">${t('weeklyDesc', { n: S.weekly.done })}</p>
       <div class="weekly"><div class="bar"><i style="width:${Math.min(100, S.weekly.done / 21 * 100)}%"></i></div>${weekly}</div>`;
   };
@@ -105,6 +105,11 @@ export function missionsModal() {
     if (c) { if (G.claimMission(+c.dataset.claim)) { sfx.coin(); gemsBurst(c, ECO.missionGems); draw(api); } return; }
     const r = e.target.closest('[data-reroll]');
     if (r) { ads.rewarded('mission_reroll').then(ok => { if (ok) { G.rerollMission(+r.dataset.reroll); draw(api); } }); return; }
+    const c2 = e.target.closest('[data-chest2]');
+    if (c2) {
+      ads.rewarded('chest_double').then(ok => { if (!ok || !G.chestReady()) return; const res = G.claimChest(2); sfx.levelUp(); gemsBurst(c2, res.gems); goldBurst(c2); confetti(60); draw(api); });
+      return;
+    }
     const ch = e.target.closest('[data-chest]');
     if (ch && G.chestReady()) { const res = G.claimChest(); sfx.levelUp(); gemsBurst(ch, res.gems); goldBurst(ch); confetti(40); draw(api); return; }
     const w = e.target.closest('[data-week]');
@@ -400,6 +405,12 @@ export function shopModal(onPurchase = purchaseHandler) {
       if (G.buyGemShop(id)) { sfx.levelUp(); const [x, y] = ctr(gs); sparkles(x, y, 16); toast(gemShopToast(id)); draw(api); }
       return;
     }
+    const aw = e.target.closest('[data-adwarp]');
+    if (aw) {
+      const ok = await ads.rewarded('free_time_skip');
+      if (ok) { const v = G.grantAdWarp(); if (v) { sfx.coin(); const [x, y] = ctr(aw); coinBurst(x, y, 14, goldPill()); toast(ic('gold') + ' +' + fmt(v)); } draw(api); }
+      return;
+    }
     const wp = e.target.closest('[data-warp]');
     if (wp) { warpModal(+wp.dataset.warp); return; }
     const sp = e.target.closest('[data-season]');
@@ -482,6 +493,7 @@ function accelSection() {
     ${row('x3', `<span class="x3">x3</span>`, t('gs_x3'), x3 > 0 ? t('boostActive', { t: fmtTime(x3) }) : t('gs_x3_d'), g('x3').gems)}
     ${row('viral', ic('star', 'xl'), t('gs_viral'), t('gs_viral_d', { m: g('viral').mult, n: g('viral').min }), g('viral').gems)}
     ${row('pass', ic('pen', 'xl'), t('gs_pass'), t('gs_pass_d', { n: Math.max(0, passLeft) }), g('pass').gems)}
+    ${G.adWarpLeft() > 0 ? `<div class="gs-row ok"><div class="gs-ic">${ic('clock', 'xl')}</div><div class="gs-info"><b>${t('adWarp')}</b><small>${ic('gold')} ${fmt(E.gpsNoBoost(S) * 1800)} · ${t('adWarpLeft', { n: G.adWarpLeft() })}</small></div><button class="btn sm ad" data-adwarp="1">${ic('play')} ${t('free')}</button></div>` : ''}
     <div class="warp-box"><small>${t('timeWarp')}</small><div class="warps">${warps}</div></div></div>`;
 }
 

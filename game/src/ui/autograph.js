@@ -183,7 +183,7 @@ export function startAutograph(onEnd) {
           ${rareGems ? `<div class="ar-row"><span>${t('autoRare')}</span><b>${ic('gem')} ${rareGems}</b></div>` : ''}
           <div class="big-reward">${ic('gold')}<b>${fmt(res.gold)}</b></div>`,
         buttons: [
-          { label: t('collect'), cls: 'ghost', onClick: () => { if (claimed || watching) return false; done(1); } },
+          { label: t('collect'), cls: 'ghost', onClick: () => { if (claimed || watching) return false; done(1); setTimeout(() => ads.interstitial('autograph_end'), 700); } },
           { label: `${ic('play')} ${t('autoDouble')}`, cls: 'ad', close: false, onClick: (a) => {
             if (claimed || watching) return;
             watching = true;

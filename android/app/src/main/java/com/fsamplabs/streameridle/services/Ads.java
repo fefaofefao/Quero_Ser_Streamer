@@ -71,10 +71,8 @@ public class Ads {
         MobileAds.setRequestConfiguration(MobileAds.getRequestConfiguration().toBuilder()
                 .setMaxAdContentRating(RequestConfiguration.MAX_AD_CONTENT_RATING_T)
                 .build());
-        new Thread(() -> MobileAds.initialize(activity, status -> main.post(() -> {
-            loadRewarded();
-            loadInterstitial();
-        }))).start();
+        // The interstitial is loaded on demand (prepareInterstitial), only when the game can show one.
+        new Thread(() -> MobileAds.initialize(activity, status -> main.post(this::loadRewarded))).start();
     }
 
     private boolean destroyed;
@@ -106,6 +104,7 @@ public class Ads {
             @Override
             public void onAdFailedToLoad(LoadAdError error) {
                 loadingRewarded = false;
+                logLoadFail("rewarded", error);
                 rewardedRetry = Math.min(rewardedRetry + 1, 6);
                 main.postDelayed(retryRewarded, (long) (Math.pow(2, rewardedRetry) * 1000));
             }
@@ -128,6 +127,7 @@ public class Ads {
             @Override
             public void onAdFailedToLoad(LoadAdError error) {
                 loadingInterstitial = false;
+                logLoadFail("interstitial", error);
                 interstitialRetry = Math.min(interstitialRetry + 1, 6);
                 main.postDelayed(Ads.this::loadInterstitial, (long) (Math.pow(2, interstitialRetry) * 1000));
             }
@@ -175,26 +175,46 @@ public class Ads {
         ad.show(activity, rewardItem -> earned[0] = true);
     }
 
+    public void prepareInterstitial() {
+        dropExpired();
+        if (interstitial == null) loadInterstitial();
+    }
+
     public void showInterstitial(String placement) {
         dropExpired();
         if (interstitial == null) {
+            Analytics.log("ad_inter_not_ready", one("placement", placement));
             loadInterstitial();
             return;
         }
+        Analytics.log("ad_inter_shown", one("placement", placement));
         InterstitialAd ad = interstitial;
         interstitial = null;
         ad.setFullScreenContentCallback(new FullScreenContentCallback() {
             @Override
             public void onAdDismissedFullScreenContent() {
-                loadInterstitial();
+                // next one is loaded when the game asks (prepareInterstitial)
             }
 
             @Override
             public void onAdFailedToShowFullScreenContent(AdError adError) {
-                loadInterstitial();
+                Analytics.log("ad_inter_show_failed", one("code", String.valueOf(adError.getCode())));
             }
         });
         ad.show(activity);
+    }
+
+    // Load failures by reason (no fill, network, invalid request...) show up in Firebase.
+    private void logLoadFail(String type, LoadAdError error) {
+        JSONObject o = one("type", type);
+        try { o.put("code", error.getCode()); o.put("reason", error.getMessage()); } catch (Exception ignored) { }
+        Analytics.log("ad_load_failed", o);
+    }
+
+    private static JSONObject one(String k, String v) {
+        JSONObject o = new JSONObject();
+        try { o.put(k, v); } catch (Exception ignored) { }
+        return o;
     }
 
     public boolean privacyOptionsRequired() {
